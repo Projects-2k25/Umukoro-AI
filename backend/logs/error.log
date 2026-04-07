@@ -1,0 +1,19 @@
+2026-04-07T10:28:52: (node:20081) [MONGOOSE] Warning: Duplicate schema index on {"email":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+2026-04-07T10:28:52: (Use `node --trace-warnings ...` to show where the warning was created)
+2026-04-07T10:28:52: [31m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [31m  ERROR[39m [38;5;3m[NestApplication] [39m[31mError: listen EADDRINUSE: address already in use :::3000[39m[38;5;3m +1ms[39m
+2026-04-07T10:28:52: Error: listen EADDRINUSE: address already in use :::3000
+2026-04-07T10:28:52:     at Server.setupListenHandle [as _listen2] (node:net:1817:16)
+2026-04-07T10:28:52:     at listenInCluster (node:net:1865:12)
+2026-04-07T10:28:52:     at Server.listen (node:net:1953:7)
+2026-04-07T10:28:52:     at ExpressAdapter.listen (/Users/macbook/projects/agency/talent-lens/backend/node_modules/@nestjs/platform-express/adapters/express-adapter.js:95:32)
+2026-04-07T10:28:52:     at /Users/macbook/projects/agency/talent-lens/backend/node_modules/@nestjs/core/nest-application.js:183:30
+2026-04-07T10:28:52:     at new Promise (<anonymous>)
+2026-04-07T10:28:52:     at NestApplication.listen (/Users/macbook/projects/agency/talent-lens/backend/node_modules/@nestjs/core/nest-application.js:173:16)
+2026-04-07T10:28:52:     at processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-04-07T10:28:52:     at bootstrap (/Users/macbook/projects/agency/talent-lens/backend/src/main.ts:36:3) {
+2026-04-07T10:28:52:   code: 'EADDRINUSE',
+2026-04-07T10:28:52:   errno: -48,
+2026-04-07T10:28:52:   syscall: 'listen',
+2026-04-07T10:28:52:   address: '::',
+2026-04-07T10:28:52:   port: 3000
+2026-04-07T10:28:52: }

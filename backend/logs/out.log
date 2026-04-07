@@ -1,0 +1,47 @@
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +9ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMongooseModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mThrottlerModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mClientsModule dependencies initialized[39m[38;5;3m +109ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mGrpcModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMongooseCoreModule dependencies initialized[39m[38;5;3m +28ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMongooseModule dependencies initialized[39m[38;5;3m +7ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMongooseModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMongooseModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMongooseModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMongooseModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJobsModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mScreeningsModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDashboardModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mApplicantsModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/api/v1/auth}:[39m[38;5;3m +21ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/auth/register, POST} route[39m[38;5;3m +1ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/auth/login, POST} route[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/auth/me, GET} route[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mJobsController {/api/v1/jobs}:[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/jobs, POST} route[39m[38;5;3m +1ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/jobs, GET} route[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/jobs/:id, GET} route[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/jobs/:id, PATCH} route[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/jobs/:id, DELETE} route[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/jobs/:id/stats, GET} route[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mApplicantsController {/api/v1/applicants}:[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/applicants/import/:jobId, POST} route[39m[38;5;3m +1ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/applicants/upload/:jobId, POST} route[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/applicants, GET} route[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/applicants/:id, GET} route[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/applicants/:id, DELETE} route[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mScreeningsController {/api/v1/screenings}:[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/screenings, POST} route[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/screenings, GET} route[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/screenings/:id, GET} route[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/screenings/:id/results, GET} route[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDashboardController {/api/v1/dashboard}:[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v1/dashboard/overview, GET} route[39m[38;5;3m +0ms[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[ScreeningServiceClient] [39m[32mScreening Service gRPC client initialized[39m
+2026-04-07T10:28:52: [32m[Nest] 20081  - [39m04/07/2026, 10:28:52 AM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +0ms[39m
