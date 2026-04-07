@@ -1,0 +1,180 @@
+syntax = "proto3";
+
+package screening;
+
+/**
+ * TalentLens Screening Service - gRPC Interface
+ * AI-powered talent screening and resume extraction.
+ *
+ * No authentication required - internal services are trusted.
+ * The calling service passes job/candidate data after authentication.
+ */
+service ScreeningService {
+  // Screen candidates against job requirements, return ranked shortlist
+  rpc ScreenCandidates(ScreenCandidatesRequest) returns (ScreenCandidatesResponse);
+
+  // Extract structured profile from resume text
+  rpc ExtractResume(ExtractResumeRequest) returns (ExtractResumeResponse);
+
+  // Health check for service monitoring
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+// ============================================================================
+// Screening Messages
+// ============================================================================
+
+message SkillInput {
+  string name = 1;
+  int32 weight = 2;
+  bool required = 3;
+}
+
+message EducationReqInput {
+  string level = 1;
+  string field = 2;
+  bool required = 3;
+}
+
+message JobInput {
+  string title = 1;
+  string description = 2;
+  repeated SkillInput required_skills = 3;
+  string experience_level = 4;
+  int32 min_experience_years = 5;
+  int32 max_experience_years = 6;
+  repeated EducationReqInput education_requirements = 7;
+}
+
+message CandidateSkill {
+  string name = 1;
+  float years_of_experience = 2;
+}
+
+message WorkHistoryItem {
+  string title = 1;
+  string company = 2;
+  string start_date = 3;
+  string end_date = 4;
+  string description = 5;
+}
+
+message EducationItem {
+  string degree = 1;
+  string field = 2;
+  string institution = 3;
+  int32 graduation_year = 4;
+}
+
+message CandidateInput {
+  string id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  repeated CandidateSkill skills = 4;
+  float total_experience_years = 5;
+  string current_title = 6;
+  string current_company = 7;
+  repeated WorkHistoryItem work_history = 8;
+  repeated EducationItem education = 9;
+  repeated string certifications = 10;
+  string resume_text = 11;
+}
+
+message ScreeningWeights {
+  float skills = 1;
+  float experience = 2;
+  float education = 3;
+  float relevance = 4;
+}
+
+message ScreeningConfig {
+  int32 shortlist_size = 1;
+  ScreeningWeights weights = 2;
+  string custom_instructions = 3;
+}
+
+message ScreenCandidatesRequest {
+  JobInput job = 1;
+  repeated CandidateInput candidates = 2;
+  ScreeningConfig config = 3;
+  string request_id = 4;
+}
+
+// --- Response ---
+
+message DimensionAnalysis {
+  string dimension = 1;
+  int32 score = 2;
+  string rationale = 3;
+}
+
+message RankedCandidate {
+  string candidate_id = 1;
+  int32 rank = 2;
+  int32 overall_score = 3;
+  int32 skills_score = 4;
+  int32 experience_score = 5;
+  int32 education_score = 6;
+  int32 relevance_score = 7;
+  repeated string strengths = 8;
+  repeated string gaps = 9;
+  repeated string risks = 10;
+  string recommendation = 11;       // STRONG_YES, YES, MAYBE, NO
+  string reasoning_summary = 12;
+  repeated DimensionAnalysis dimension_analysis = 13;
+}
+
+message ScreeningMetadata {
+  int32 total_evaluated = 1;
+  int32 processing_time_ms = 2;
+  string model = 3;
+}
+
+message ScreenCandidatesResponse {
+  bool success = 1;
+  repeated RankedCandidate results = 2;
+  ScreeningMetadata metadata = 3;
+  string error = 4;
+}
+
+// ============================================================================
+// Resume Extraction Messages
+// ============================================================================
+
+message ExtractResumeRequest {
+  string resume_text = 1;
+  string request_id = 2;
+}
+
+message ExtractResumeResponse {
+  bool success = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string email = 4;
+  string phone = 5;
+  repeated CandidateSkill skills = 6;
+  float total_experience_years = 7;
+  string current_title = 8;
+  string current_company = 9;
+  repeated WorkHistoryItem work_history = 10;
+  repeated EducationItem education = 11;
+  repeated string certifications = 12;
+  string error = 13;
+}
+
+// ============================================================================
+// Health Check Messages
+// ============================================================================
+
+message HealthCheckRequest {
+  string service = 1;
+  string request_id = 2;
+}
+
+message HealthCheckResponse {
+  bool healthy = 1;
+  string status = 2;
+  string service = 3;
+  string version = 4;
+  string message = 5;
+}

@@ -1,0 +1,49 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongodb:27017/talentlens
+      - JWT_SECRET=talentlens-dev-secret-change-in-prod
+      - JWT_EXPIRES_IN=7d
+      - AI_SERVICE_URL=http://ai-service:8000
+      - CLIENT_URL=http://localhost:7001
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  ai-service:
+    build: ./ai-service
+    ports:
+      - "8000:8000"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=gemini-2.0-flash
+      - ENVIRONMENT=development
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "7001:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
+
+volumes:
+  mongo_data:
