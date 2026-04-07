@@ -29,7 +29,8 @@ Built for the **Umurava AI Hackathon** — "Building AI Products for the Human R
 |-------|-----------|
 | Frontend | Next.js 16, TypeScript, Tailwind CSS, Redux Toolkit, Recharts |
 | Backend | NestJS 10, MongoDB (Mongoose), JWT Auth, Swagger |
-| AI Service | Python FastAPI, Google Gemini 2.0 Flash, LangGraph |
+| AI Service | Python FastAPI, Google Gemini 2.0 Flash (primary), LangChain, LangGraph |
+| Bonus | Multi-LLM support — Claude (Anthropic) available as an alternative provider |
 | Infrastructure | Docker Compose, MongoDB 7 |
 
 ## AI Decision Flow
@@ -96,8 +97,11 @@ Password: Demo123!
 ### AI Service (.env)
 | Variable | Description |
 |----------|-----------|
-| GEMINI_API_KEY | Google Gemini API key (required) |
-| GEMINI_MODEL | Model to use (default: gemini-2.0-flash) |
+| LLM_PROVIDER | LLM provider to use: `gemini` (default) or `claude` |
+| GEMINI_API_KEY | Google Gemini API key (required if provider is gemini) |
+| GEMINI_MODEL | Gemini model (default: gemini-2.0-flash) |
+| ANTHROPIC_API_KEY | Anthropic API key (required if provider is claude) |
+| CLAUDE_MODEL | Claude model (default: claude-sonnet-4-20250514) |
 
 ## API Documentation
 
@@ -108,7 +112,7 @@ Backend Swagger docs available at `http://localhost:3000/api-docs`
 - **Screening is synchronous** — For hackathon simplicity, the screening API call blocks until AI processing completes (5-15s for up to 50 candidates)
 - **No file storage** — PDF resumes are parsed in-memory; text is stored but original files are not persisted
 - **Single-tenant** — No multi-organization support; designed for single-recruiter use
-- **Gemini rate limits** — Large candidate pools (100+) may hit API rate limits; batches of 10 mitigate this
+- **Gemini rate limits** — Large candidate pools (100+) may hit API rate limits; batches of 10 mitigate this. Switch to Claude via `LLM_PROVIDER=claude` as a fallback
 - **Scoring calibration** — AI scores are relative within a screening, not absolute across different screenings
 
 ## Team
