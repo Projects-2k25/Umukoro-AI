@@ -204,6 +204,8 @@ export default function JobDetailPage() {
                     <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Name</th>
                     <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Skills</th>
                     <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Experience</th>
+                    <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Location</th>
+                    <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Availability</th>
                     <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Source</th>
                     <th className="text-right px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Actions</th>
                   </tr>
@@ -213,17 +215,30 @@ export default function JobDetailPage() {
                     <tr key={a._id} className="hover:bg-gray-50">
                       <td className="px-6 py-3">
                         <p className="text-sm font-medium text-gray-900">{a.firstName} {a.lastName}</p>
-                        <p className="text-xs text-gray-500">{a.email || a.currentTitle || ''}</p>
+                        <p className="text-xs text-gray-500 truncate max-w-[200px]">{a.headline || a.email || a.currentTitle || ''}</p>
                       </td>
                       <td className="px-6 py-3">
                         <div className="flex flex-wrap gap-1">
                           {a.skills.slice(0, 3).map((s, i) => (
-                            <span key={i} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">{s.name}</span>
+                            <span key={i} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
+                              {s.name}{s.level ? ` · ${s.level}` : ''}
+                            </span>
                           ))}
                           {a.skills.length > 3 && <span className="text-xs text-gray-400">+{a.skills.length - 3}</span>}
                         </div>
                       </td>
                       <td className="px-6 py-3 text-sm text-gray-600">{a.totalExperienceYears}yr</td>
+                      <td className="px-6 py-3 text-sm text-gray-600">{a.location || '—'}</td>
+                      <td className="px-6 py-3">
+                        {a.availability?.status ? (
+                          <span className={cn(
+                            'px-2 py-0.5 rounded text-xs font-medium',
+                            a.availability.status === 'Available' ? 'bg-emerald-100 text-emerald-700' :
+                            a.availability.status === 'Open to Opportunities' ? 'bg-amber-100 text-amber-700' :
+                            'bg-gray-100 text-gray-600'
+                          )}>{a.availability.status}</span>
+                        ) : <span className="text-xs text-gray-400">—</span>}
+                      </td>
                       <td className="px-6 py-3"><StatusBadge status={a.source} type="job" /></td>
                       <td className="px-6 py-3 text-right">
                         <button onClick={() => applicantsApi.delete(a._id).then(fetchData)}
