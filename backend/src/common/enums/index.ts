@@ -53,3 +53,29 @@ export enum Recommendation {
   MAYBE = 'MAYBE',
   NO = 'NO',
 }
+
+export enum SkillLevel {
+  BEGINNER = 'Beginner',
+  INTERMEDIATE = 'Intermediate',
+  ADVANCED = 'Advanced',
+  EXPERT = 'Expert',
+}
+
+export enum LanguageProficiency {
+  BASIC = 'Basic',
+  CONVERSATIONAL = 'Conversational',
+  FLUENT = 'Fluent',
+  NATIVE = 'Native',
+}
+
+export enum AvailabilityStatus {
+  AVAILABLE = 'Available',
+  OPEN_TO_OPPORTUNITIES = 'Open to Opportunities',
+  NOT_AVAILABLE = 'Not Available',
+}
+
+export enum AvailabilityType {
+  FULL_TIME = 'Full-time',
+  PART_TIME = 'Part-time',
+  CONTRACT = 'Contract',
+}

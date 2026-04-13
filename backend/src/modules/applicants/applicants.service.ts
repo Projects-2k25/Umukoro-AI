@@ -26,21 +26,83 @@ export class ApplicantsService {
     const applicants = profiles.map((profile) => ({
       jobId: new Types.ObjectId(jobId),
       source: ApplicantSource.UMURAVA_PROFILE,
+      // 3.1 Basic Information
       firstName: profile.firstName || profile.first_name || '',
       lastName: profile.lastName || profile.last_name || '',
       email: profile.email || '',
-      phone: profile.phone || '',
+      headline: profile.headline || '',
+      bio: profile.bio || '',
+      location: profile.location || '',
+      // 3.2 Skills & Languages
       skills: (profile.skills || []).map((s: any) =>
-        typeof s === 'string' ? { name: s, yearsOfExperience: 0 } : s,
+        typeof s === 'string'
+          ? { name: s, level: 'Intermediate', yearsOfExperience: 0 }
+          : { name: s.name, level: s.level || 'Intermediate', yearsOfExperience: s.yearsOfExperience || 0 },
       ),
+      languages: (profile.languages || []).map((l: any) =>
+        typeof l === 'string'
+          ? { name: l, proficiency: 'Fluent' }
+          : { name: l.name, proficiency: l.proficiency || 'Fluent' },
+      ),
+      // 3.3 Work Experience
+      experience: (profile.experience || profile.workHistory || profile.work_history || []).map((w: any) => ({
+        company: w.company || '',
+        role: w.role || w.title || '',
+        startDate: w.startDate || w['Start Date'] || '',
+        endDate: w.endDate || w['End Date'] || '',
+        description: w.description || '',
+        technologies: w.technologies || [],
+        isCurrent: w.isCurrent || w['Is Current'] || false,
+      })),
+      // 3.4 Education
+      education: (profile.education || []).map((e: any) => ({
+        institution: e.institution || '',
+        degree: e.degree || '',
+        fieldOfStudy: e.fieldOfStudy || e['Field of Study'] || e.field || '',
+        startYear: e.startYear || e['Start Year'] || null,
+        endYear: e.endYear || e['End Year'] || e.graduationYear || null,
+      })),
+      // 3.5 Certifications
+      certifications: (profile.certifications || []).map((c: any) =>
+        typeof c === 'string'
+          ? { name: c, issuer: '', issueDate: '' }
+          : { name: c.name || '', issuer: c.issuer || '', issueDate: c.issueDate || c['Issue Date'] || '' },
+      ),
+      // 3.6 Projects
+      projects: (profile.projects || []).map((p: any) => ({
+        name: p.name || '',
+        description: p.description || '',
+        technologies: p.technologies || [],
+        role: p.role || '',
+        link: p.link || '',
+        startDate: p.startDate || p['Start Date'] || '',
+        endDate: p.endDate || p['End Date'] || '',
+      })),
+      // 3.7 Availability
+      availability: profile.availability
+        ? {
+            status: profile.availability.status || 'Available',
+            type: profile.availability.type || 'Full-time',
+            startDate: profile.availability.startDate || profile.availability['Start Date'] || '',
+          }
+        : { status: 'Available', type: 'Full-time', startDate: '' },
+      // 3.8 Social Links
+      socialLinks: profile.socialLinks
+        ? {
+            linkedin: profile.socialLinks.linkedin || '',
+            github: profile.socialLinks.github || '',
+            portfolio: profile.socialLinks.portfolio || '',
+          }
+        : {
+            linkedin: profile.linkedinUrl || profile.linkedin_url || '',
+            github: profile.githubUrl || profile.github_url || '',
+            portfolio: profile.portfolioUrl || profile.portfolio_url || '',
+          },
+      // Internal fields
+      phone: profile.phone || '',
       totalExperienceYears: profile.totalExperienceYears || profile.experience_years || 0,
       currentTitle: profile.currentTitle || profile.title || '',
       currentCompany: profile.currentCompany || profile.company || '',
-      workHistory: profile.workHistory || profile.work_history || [],
-      education: profile.education || [],
-      certifications: profile.certifications || [],
-      portfolioUrl: profile.portfolioUrl || profile.portfolio_url || '',
-      linkedinUrl: profile.linkedinUrl || profile.linkedin_url || '',
       umuravaId: profile.id || profile.umuravaId || '',
       umuravaProfile: profile,
       rawData: profile,
@@ -92,7 +154,7 @@ export class ApplicantsService {
         .split(/[,;]/)
         .map((s: string) => s.trim())
         .filter(Boolean)
-        .map((name: string) => ({ name, yearsOfExperience: 0 }));
+        .map((name: string) => ({ name, level: 'Intermediate', yearsOfExperience: 0 }));
 
       applicants.push({
         jobId: new Types.ObjectId(jobId),
@@ -100,14 +162,26 @@ export class ApplicantsService {
         firstName: firstName.toString().trim(),
         lastName: lastName.toString().trim(),
         email: (row.email || row.Email || '').toString().trim(),
-        phone: (row.phone || row.Phone || '').toString().trim(),
+        headline: (row.headline || row.Headline || '').toString().trim(),
+        bio: (row.bio || row.Bio || '').toString().trim(),
+        location: (row.location || row.Location || '').toString().trim(),
         skills,
+        experience: [],
+        education: row.education || row.Education
+          ? [{ degree: 'Bachelor\'s', fieldOfStudy: (row.education || row.Education || '').toString(), institution: '' }]
+          : [],
+        certifications: [],
+        projects: [],
+        availability: { status: 'Available', type: 'Full-time', startDate: '' },
+        socialLinks: {
+          linkedin: (row.linkedin || row.LinkedIn || '').toString().trim(),
+          github: (row.github || row.GitHub || '').toString().trim(),
+          portfolio: (row.portfolio || row.Portfolio || '').toString().trim(),
+        },
+        phone: (row.phone || row.Phone || '').toString().trim(),
         totalExperienceYears: parseInt(row.experience || row.Experience || row.experience_years || '0', 10) || 0,
         currentTitle: (row.title || row.Title || row.currentTitle || '').toString().trim(),
         currentCompany: (row.company || row.Company || row.currentCompany || '').toString().trim(),
-        education: row.education || row.Education
-          ? [{ degree: 'BACHELORS' as const, field: (row.education || row.Education || '').toString(), institution: '' }]
-          : [],
         rawData: row,
       });
     });
@@ -157,17 +231,55 @@ export class ApplicantsService {
     const applicant = await this.applicantModel.create({
       jobId: new Types.ObjectId(jobId),
       source: ApplicantSource.PDF_UPLOAD,
+      // 3.1 Basic Information
       firstName: extractedProfile.firstName || 'Unknown',
       lastName: extractedProfile.lastName || 'Candidate',
       email: extractedProfile.email || '',
+      headline: extractedProfile.headline || '',
+      bio: extractedProfile.bio || '',
+      location: extractedProfile.location || '',
+      // 3.2 Skills & Languages
+      skills: (extractedProfile.skills || []).map((s: any) => ({
+        name: s.name || s,
+        level: s.level || 'Intermediate',
+        yearsOfExperience: s.yearsOfExperience || 0,
+      })),
+      languages: extractedProfile.languages || [],
+      // 3.3 Experience
+      experience: (extractedProfile.experience || extractedProfile.workHistory || []).map((w: any) => ({
+        company: w.company || '',
+        role: w.role || w.title || '',
+        startDate: w.startDate || '',
+        endDate: w.endDate || '',
+        description: w.description || '',
+        technologies: w.technologies || [],
+        isCurrent: w.isCurrent || false,
+      })),
+      // 3.4 Education
+      education: (extractedProfile.education || []).map((e: any) => ({
+        institution: e.institution || '',
+        degree: e.degree || '',
+        fieldOfStudy: e.fieldOfStudy || e.field || '',
+        startYear: e.startYear || null,
+        endYear: e.endYear || e.graduationYear || null,
+      })),
+      // 3.5 Certifications
+      certifications: (extractedProfile.certifications || []).map((c: any) =>
+        typeof c === 'string'
+          ? { name: c, issuer: '', issueDate: '' }
+          : { name: c.name || '', issuer: c.issuer || '', issueDate: c.issueDate || '' },
+      ),
+      // 3.6 Projects
+      projects: extractedProfile.projects || [],
+      // 3.7 Availability
+      availability: extractedProfile.availability || { status: 'Available', type: 'Full-time', startDate: '' },
+      // 3.8 Social Links
+      socialLinks: extractedProfile.socialLinks || { linkedin: '', github: '', portfolio: '' },
+      // Internal
       phone: extractedProfile.phone || '',
-      skills: extractedProfile.skills || [],
       totalExperienceYears: extractedProfile.totalExperienceYears || 0,
       currentTitle: extractedProfile.currentTitle || '',
       currentCompany: extractedProfile.currentCompany || '',
-      workHistory: extractedProfile.workHistory || [],
-      education: extractedProfile.education || [],
-      certifications: extractedProfile.certifications || [],
       resumeText,
       rawData: extractedProfile,
     });

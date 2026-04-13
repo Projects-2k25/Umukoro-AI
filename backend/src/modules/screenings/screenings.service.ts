@@ -70,13 +70,20 @@ export class ScreeningsService {
           id: a._id.toString(),
           firstName: a.firstName,
           lastName: a.lastName,
+          headline: a.headline || '',
+          bio: a.bio || '',
+          location: a.location || '',
           skills: a.skills,
+          languages: a.languages || [],
           totalExperienceYears: a.totalExperienceYears,
           currentTitle: a.currentTitle,
           currentCompany: a.currentCompany,
-          workHistory: a.workHistory,
+          experience: a.experience || [],
           education: a.education,
           certifications: a.certifications,
+          projects: a.projects || [],
+          availability: a.availability || {},
+          socialLinks: a.socialLinks || {},
           resumeText: a.resumeText || '',
         })),
         config: {
@@ -191,7 +198,7 @@ export class ScreeningsService {
     const results = await this.resultModel
       .find({ screeningId: screening._id })
       .sort({ rank: 1 })
-      .populate('applicantId', 'firstName lastName email currentTitle currentCompany skills education');
+      .populate('applicantId', 'firstName lastName email headline location currentTitle currentCompany skills education experience projects availability');
 
     return { screening, results };
   }
@@ -203,7 +210,7 @@ export class ScreeningsService {
     const query = this.resultModel
       .find({ screeningId: screening._id })
       .sort({ rank: 1 })
-      .populate('applicantId', 'firstName lastName email currentTitle currentCompany skills education totalExperienceYears');
+      .populate('applicantId', 'firstName lastName email headline location currentTitle currentCompany skills education experience projects availability totalExperienceYears');
 
     if (limit) query.limit(limit);
 
