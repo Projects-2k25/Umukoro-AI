@@ -16,8 +16,13 @@ from app.schemas.screening import (
     JobInput,
     CandidateInput,
     CandidateSkill,
-    WorkHistoryItem,
+    LanguageItem,
+    ExperienceItem,
     EducationItem,
+    CertificationItem,
+    ProjectItem,
+    AvailabilityItem,
+    SocialLinksItem,
     SkillInput,
     EducationReqInput,
     ScreeningConfigInput,
@@ -69,29 +74,70 @@ class ScreeningServicer(screening_service_pb2_grpc.ScreeningServiceServicer):
                     id=c.id,
                     firstName=c.first_name,
                     lastName=c.last_name,
+                    email=c.email or "",
+                    headline=c.headline or "",
+                    bio=c.bio or "",
+                    location=c.location or "",
                     skills=[
-                        CandidateSkill(name=s.name, yearsOfExperience=s.years_of_experience)
+                        CandidateSkill(
+                            name=s.name,
+                            level=s.level or "Intermediate",
+                            yearsOfExperience=s.years_of_experience,
+                        )
                         for s in c.skills
                     ],
-                    totalExperienceYears=c.total_experience_years,
-                    currentTitle=c.current_title,
-                    currentCompany=c.current_company,
-                    workHistory=[
-                        WorkHistoryItem(
-                            title=w.title, company=w.company,
+                    languages=[
+                        LanguageItem(name=l.name, proficiency=l.proficiency or "Fluent")
+                        for l in c.languages
+                    ],
+                    experience=[
+                        ExperienceItem(
+                            company=w.company, role=w.role,
                             startDate=w.start_date, endDate=w.end_date,
                             description=w.description,
+                            technologies=list(w.technologies),
+                            isCurrent=w.is_current,
                         )
-                        for w in c.work_history
+                        for w in c.experience
                     ],
                     education=[
                         EducationItem(
-                            degree=e.degree, field=e.field,
-                            institution=e.institution, graduationYear=e.graduation_year,
+                            institution=e.institution, degree=e.degree,
+                            fieldOfStudy=e.field_of_study,
+                            startYear=e.start_year or None,
+                            endYear=e.end_year or None,
                         )
                         for e in c.education
                     ],
-                    certifications=list(c.certifications),
+                    certifications=[
+                        CertificationItem(
+                            name=cert.name, issuer=cert.issuer,
+                            issueDate=cert.issue_date,
+                        )
+                        for cert in c.certifications
+                    ],
+                    projects=[
+                        ProjectItem(
+                            name=p.name, description=p.description,
+                            technologies=list(p.technologies),
+                            role=p.role, link=p.link,
+                            startDate=p.start_date, endDate=p.end_date,
+                        )
+                        for p in c.projects
+                    ],
+                    availability=AvailabilityItem(
+                        status=c.availability.status or "Available",
+                        type=c.availability.type or "Full-time",
+                        startDate=c.availability.start_date or None,
+                    ) if c.availability and c.availability.status else None,
+                    socialLinks=SocialLinksItem(
+                        linkedin=c.social_links.linkedin or "",
+                        github=c.social_links.github or "",
+                        portfolio=c.social_links.portfolio or "",
+                    ) if c.social_links else None,
+                    totalExperienceYears=c.total_experience_years,
+                    currentTitle=c.current_title,
+                    currentCompany=c.current_company,
                     resumeText=c.resume_text,
                 )
                 for c in request.candidates
@@ -173,33 +219,72 @@ class ScreeningServicer(screening_service_pb2_grpc.ScreeningServiceServicer):
                 first_name=result.firstName,
                 last_name=result.lastName,
                 email=result.email,
-                phone=result.phone,
+                headline=result.headline or "",
+                bio=result.bio or "",
+                location=result.location or "",
                 skills=[
                     screening_service_pb2.CandidateSkill(
-                        name=s.name, years_of_experience=s.yearsOfExperience,
+                        name=s.name,
+                        level=s.level or "Intermediate",
+                        years_of_experience=s.yearsOfExperience,
                     )
                     for s in result.skills
                 ],
-                total_experience_years=result.totalExperienceYears,
-                current_title=result.currentTitle,
-                current_company=result.currentCompany,
-                work_history=[
-                    screening_service_pb2.WorkHistoryItem(
-                        title=w.title or "", company=w.company or "",
+                languages=[
+                    screening_service_pb2.LanguageItem(
+                        name=l.name, proficiency=l.proficiency or "Fluent",
+                    )
+                    for l in result.languages
+                ],
+                experience=[
+                    screening_service_pb2.ExperienceItem(
+                        company=w.company or "", role=w.role or "",
                         start_date=w.startDate or "", end_date=w.endDate or "",
                         description=w.description or "",
+                        technologies=w.technologies or [],
+                        is_current=w.isCurrent or False,
                     )
-                    for w in result.workHistory
+                    for w in result.experience
                 ],
                 education=[
                     screening_service_pb2.EducationItem(
-                        degree=e.degree or "", field=e.field or "",
-                        institution=e.institution or "",
-                        graduation_year=e.graduationYear or 0,
+                        institution=e.institution or "", degree=e.degree or "",
+                        field_of_study=e.fieldOfStudy or "",
+                        start_year=e.startYear or 0,
+                        end_year=e.endYear or 0,
                     )
                     for e in result.education
                 ],
-                certifications=result.certifications,
+                certifications=[
+                    screening_service_pb2.CertificationItem(
+                        name=c.name or "", issuer=c.issuer or "",
+                        issue_date=c.issueDate or "",
+                    )
+                    for c in result.certifications
+                ],
+                projects=[
+                    screening_service_pb2.ProjectItem(
+                        name=p.name or "", description=p.description or "",
+                        technologies=p.technologies or [],
+                        role=p.role or "", link=p.link or "",
+                        start_date=p.startDate or "", end_date=p.endDate or "",
+                    )
+                    for p in result.projects
+                ],
+                availability=screening_service_pb2.AvailabilityItem(
+                    status=result.availability.status or "",
+                    type=result.availability.type or "",
+                    start_date=result.availability.startDate or "",
+                ) if result.availability else None,
+                social_links=screening_service_pb2.SocialLinksItem(
+                    linkedin=result.socialLinks.linkedin or "",
+                    github=result.socialLinks.github or "",
+                    portfolio=result.socialLinks.portfolio or "",
+                ) if result.socialLinks else None,
+                phone=result.phone or "",
+                total_experience_years=result.totalExperienceYears,
+                current_title=result.currentTitle or "",
+                current_company=result.currentCompany or "",
             )
 
         except Exception as e:

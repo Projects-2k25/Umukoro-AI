@@ -272,38 +272,67 @@ class ScreeningWorkflowService:
         skills_str = (
             ", ".join(
                 [
-                    f"{s.name} ({s.yearsOfExperience}yr)"
+                    f"{s.name} ({s.level}, {s.yearsOfExperience}yr)"
                     for s in candidate.skills[:15]
                 ]
             )
             or "None listed"
         )
 
+        languages_str = (
+            ", ".join(
+                [f"{l.name} ({l.proficiency})" for l in candidate.languages[:5]]
+            )
+            if candidate.languages
+            else "None listed"
+        )
+
         edu_str = (
             ", ".join(
                 [
-                    f"{e.degree} in {e.field} from {e.institution}"
+                    f"{e.degree} in {e.fieldOfStudy} from {e.institution}"
                     for e in candidate.education[:3]
                 ]
             )
             or "None listed"
         )
 
-        work_str = ""
-        for w in candidate.workHistory[:3]:
-            work_str += f"\n    - {w.title} at {w.company}"
+        exp_str = ""
+        for w in candidate.experience[:3]:
+            techs = f" [{', '.join(w.technologies[:5])}]" if w.technologies else ""
+            current = " (Current)" if w.isCurrent else ""
+            exp_str += f"\n    - {w.role} at {w.company}{current}{techs}"
+
+        certs_str = (
+            ", ".join([c.name for c in candidate.certifications[:5] if c.name])
+            or "None"
+        )
+
+        projects_str = ""
+        for p in candidate.projects[:3]:
+            techs = f" [{', '.join(p.technologies[:5])}]" if p.technologies else ""
+            projects_str += f"\n    - {p.name}: {p.description[:100] if p.description else 'N/A'}{techs}"
+
+        availability_str = "N/A"
+        if candidate.availability:
+            availability_str = f"{candidate.availability.status}, {candidate.availability.type}"
 
         resume_excerpt = ""
         if candidate.resumeText:
             resume_excerpt = f"\n  Resume excerpt: {candidate.resumeText[:500]}"
 
         return f"""### Candidate #{idx}: {candidate.firstName} {candidate.lastName} (ID: {candidate.id})
+  - Headline: {candidate.headline or 'N/A'}
+  - Location: {candidate.location or 'N/A'}
   - Current Role: {candidate.currentTitle or 'N/A'} at {candidate.currentCompany or 'N/A'}
   - Total Experience: {candidate.totalExperienceYears} years
   - Skills: {skills_str}
+  - Languages: {languages_str}
   - Education: {edu_str}
-  - Work History:{work_str or ' None listed'}
-  - Certifications: {', '.join(candidate.certifications[:5]) or 'None'}{resume_excerpt}"""
+  - Work Experience:{exp_str or ' None listed'}
+  - Certifications: {certs_str}
+  - Projects:{projects_str or ' None listed'}
+  - Availability: {availability_str}{resume_excerpt}"""
 
     def _build_evaluation_prompt(self, job, batch, config) -> str:
         formatted_candidates = "\n\n".join(

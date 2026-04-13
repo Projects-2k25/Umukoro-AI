@@ -21,10 +21,10 @@ Description: {job_description}
 
 ## Instructions
 Evaluate EACH candidate against the job requirements across these dimensions:
-1. **Skills Match** (0-100): How well do the candidate's skills match required skills? Weight hard requirements heavily. Partial matches get partial credit.
-2. **Experience Match** (0-100): Does their experience level and years match? Consider career progression and relevance of past roles.
+1. **Skills Match** (0-100): How well do the candidate's skills match required skills? Consider skill level (Beginner/Intermediate/Advanced/Expert) and years of experience. Weight hard requirements heavily. Partial matches get partial credit.
+2. **Experience Match** (0-100): Does their experience level and years match? Consider career progression, relevance of past roles, and technologies used in each role.
 3. **Education Match** (0-100): Does education meet requirements? Consider both formal degrees and relevant certifications.
-4. **Role Relevance** (0-100): How relevant is their overall profile to THIS specific role? Consider industry fit, project types, and transferable skills.
+4. **Role Relevance** (0-100): How relevant is their overall profile to THIS specific role? Consider industry fit, project portfolio, transferable skills, and availability.
 
 For each candidate provide:
 - Scores for all 4 dimensions (0-100 integer)
@@ -50,15 +50,36 @@ RESUME_EXTRACTION_PROMPT = """Extract structured profile information from this r
 Resume text:
 {resume_text}
 
-Extract the following fields:
-- firstName, lastName
-- email, phone
-- skills (list of skill names with estimated years of experience)
-- totalExperienceYears (calculated from work history)
-- currentTitle, currentCompany
-- workHistory (list of positions with title, company, dates, description)
-- education (list with degree level, field, institution, graduation year)
-- certifications (list of certification names)
+Extract the following fields according to the Talent Profile Schema:
 
-For degree levels use: HIGH_SCHOOL, DIPLOMA, CERTIFICATE, BACHELORS, MASTERS, PHD
+**Basic Information:**
+- firstName, lastName, email
+- headline (short professional summary, e.g. "Backend Engineer – Node.js & AI Systems")
+- bio (detailed professional biography if present)
+- location (City, Country)
+
+**Skills & Languages:**
+- skills: list of skills with level (Beginner | Intermediate | Advanced | Expert) and estimated yearsOfExperience
+- languages: list of spoken languages with proficiency (Basic | Conversational | Fluent | Native)
+
+**Work Experience:**
+- experience: list of positions with company, role, startDate (YYYY-MM), endDate (YYYY-MM or "Present"), description, technologies used, and isCurrent flag
+
+**Education:**
+- education: list with institution, degree (e.g. "Bachelor's", "Master's", "PhD"), fieldOfStudy, startYear, endYear
+
+**Certifications:**
+- certifications: list with name, issuer, issueDate (YYYY-MM)
+
+**Projects:**
+- projects: list with name, description, technologies, role, link (if available), startDate, endDate
+
+**Availability:**
+- availability: status (Available | Open to Opportunities | Not Available), type (Full-time | Part-time | Contract)
+
+**Social Links:**
+- socialLinks: linkedin, github, portfolio URLs if present
+
+**Internal fields:**
+- phone, totalExperienceYears (calculated from work history), currentTitle, currentCompany
 """

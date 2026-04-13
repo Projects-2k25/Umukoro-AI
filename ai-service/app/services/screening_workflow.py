@@ -36,7 +36,19 @@ async def extract_resume(request: ResumeExtractionRequest) -> ExtractedProfile:
     prompt += """
 
 Return a JSON object with these fields:
-{"firstName": "", "lastName": "", "email": "", "phone": "", "skills": [{"name": "", "yearsOfExperience": 0}], "totalExperienceYears": 0, "currentTitle": "", "currentCompany": "", "workHistory": [{"title": "", "company": "", "startDate": "", "endDate": "", "description": ""}], "education": [{"degree": "", "field": "", "institution": "", "graduationYear": 0}], "certifications": []}
+{
+  "firstName": "", "lastName": "", "email": "",
+  "headline": "", "bio": "", "location": "",
+  "skills": [{"name": "", "level": "Beginner | Intermediate | Advanced | Expert", "yearsOfExperience": 0}],
+  "languages": [{"name": "", "proficiency": "Basic | Conversational | Fluent | Native"}],
+  "experience": [{"company": "", "role": "", "startDate": "YYYY-MM", "endDate": "YYYY-MM", "description": "", "technologies": [], "isCurrent": false}],
+  "education": [{"institution": "", "degree": "", "fieldOfStudy": "", "startYear": 0, "endYear": 0}],
+  "certifications": [{"name": "", "issuer": "", "issueDate": "YYYY-MM"}],
+  "projects": [{"name": "", "description": "", "technologies": [], "role": "", "link": "", "startDate": "YYYY-MM", "endDate": "YYYY-MM"}],
+  "availability": {"status": "Available", "type": "Full-time"},
+  "socialLinks": {"linkedin": "", "github": "", "portfolio": ""},
+  "phone": "", "totalExperienceYears": 0, "currentTitle": "", "currentCompany": ""
+}
 
 Return ONLY the JSON object."""
 

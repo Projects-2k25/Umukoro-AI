@@ -24,37 +24,94 @@ class JobInput(BaseModel):
     educationRequirements: list[EducationReqInput] = []
 
 
+# --- Talent Profile Schema (aligned with hackathon spec) ---
+
+
 class CandidateSkill(BaseModel):
     name: str
+    level: Optional[str] = "Intermediate"
     yearsOfExperience: float = 0
 
 
-class WorkHistoryItem(BaseModel):
-    title: Optional[str] = ""
+class LanguageItem(BaseModel):
+    name: str
+    proficiency: Optional[str] = "Fluent"
+
+
+class ExperienceItem(BaseModel):
     company: Optional[str] = ""
+    role: Optional[str] = ""
     startDate: Optional[str] = None
     endDate: Optional[str] = None
     description: Optional[str] = ""
+    technologies: list[str] = []
+    isCurrent: bool = False
 
 
 class EducationItem(BaseModel):
-    degree: Optional[str] = ""
-    field: Optional[str] = ""
     institution: Optional[str] = ""
-    graduationYear: Optional[int] = None
+    degree: Optional[str] = ""
+    fieldOfStudy: Optional[str] = ""
+    startYear: Optional[int] = None
+    endYear: Optional[int] = None
+
+
+class CertificationItem(BaseModel):
+    name: Optional[str] = ""
+    issuer: Optional[str] = ""
+    issueDate: Optional[str] = ""
+
+
+class ProjectItem(BaseModel):
+    name: Optional[str] = ""
+    description: Optional[str] = ""
+    technologies: list[str] = []
+    role: Optional[str] = ""
+    link: Optional[str] = ""
+    startDate: Optional[str] = None
+    endDate: Optional[str] = None
+
+
+class AvailabilityItem(BaseModel):
+    status: Optional[str] = "Available"
+    type: Optional[str] = "Full-time"
+    startDate: Optional[str] = None
+
+
+class SocialLinksItem(BaseModel):
+    linkedin: Optional[str] = ""
+    github: Optional[str] = ""
+    portfolio: Optional[str] = ""
 
 
 class CandidateInput(BaseModel):
     id: str
+    # 3.1 Basic Information
     firstName: str
     lastName: str
+    email: Optional[str] = ""
+    headline: Optional[str] = ""
+    bio: Optional[str] = ""
+    location: Optional[str] = ""
+    # 3.2 Skills & Languages
     skills: list[CandidateSkill] = []
+    languages: list[LanguageItem] = []
+    # 3.3 Work Experience
+    experience: list[ExperienceItem] = []
+    # 3.4 Education
+    education: list[EducationItem] = []
+    # 3.5 Certifications
+    certifications: list[CertificationItem] = []
+    # 3.6 Projects
+    projects: list[ProjectItem] = []
+    # 3.7 Availability
+    availability: Optional[AvailabilityItem] = None
+    # 3.8 Social Links
+    socialLinks: Optional[SocialLinksItem] = None
+    # Internal fields (not in spec but useful for AI)
     totalExperienceYears: float = 0
     currentTitle: Optional[str] = ""
     currentCompany: Optional[str] = ""
-    workHistory: list[WorkHistoryItem] = []
-    education: list[EducationItem] = []
-    certifications: list[str] = []
     resumeText: Optional[str] = ""
 
 
@@ -129,14 +186,30 @@ class ResumeExtractionRequest(BaseModel):
 
 
 class ExtractedProfile(BaseModel):
+    # 3.1 Basic Information
     firstName: str = ""
     lastName: str = ""
     email: str = ""
-    phone: str = ""
+    headline: str = ""
+    bio: str = ""
+    location: str = ""
+    # 3.2 Skills & Languages
     skills: list[CandidateSkill] = []
+    languages: list[LanguageItem] = []
+    # 3.3 Work Experience
+    experience: list[ExperienceItem] = []
+    # 3.4 Education
+    education: list[EducationItem] = []
+    # 3.5 Certifications
+    certifications: list[CertificationItem] = []
+    # 3.6 Projects
+    projects: list[ProjectItem] = []
+    # 3.7 Availability
+    availability: Optional[AvailabilityItem] = None
+    # 3.8 Social Links
+    socialLinks: Optional[SocialLinksItem] = None
+    # Internal
+    phone: str = ""
     totalExperienceYears: float = 0
     currentTitle: str = ""
     currentCompany: str = ""
-    workHistory: list[WorkHistoryItem] = []
-    education: list[EducationItem] = []
-    certifications: list[str] = []
