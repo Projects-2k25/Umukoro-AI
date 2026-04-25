@@ -40,8 +40,6 @@ export interface Job {
   updatedAt: string;
 }
 
-// --- Talent Profile Schema Types (aligned with hackathon spec) ---
-
 export interface ApplicantSkill {
   name: string;
   level?: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
@@ -103,29 +101,20 @@ export interface Applicant {
   _id: string;
   jobId: string;
   source: 'UMURAVA_PROFILE' | 'CSV_IMPORT' | 'PDF_UPLOAD' | 'MANUAL';
-  // 3.1 Basic Information
   firstName: string;
   lastName: string;
   email: string;
   headline?: string;
   bio?: string;
   location?: string;
-  // 3.2 Skills & Languages
   skills: ApplicantSkill[];
   languages?: Language[];
-  // 3.3 Work Experience
   experience?: Experience[];
-  // 3.4 Education
   education?: Education[];
-  // 3.5 Certifications
   certifications?: Certification[];
-  // 3.6 Projects
   projects?: Project[];
-  // 3.7 Availability
   availability?: Availability;
-  // 3.8 Social Links
   socialLinks?: SocialLinks;
-  // Internal fields
   phone?: string;
   totalExperienceYears: number;
   currentTitle?: string;
@@ -133,8 +122,6 @@ export interface Applicant {
   resumeText?: string;
   createdAt: string;
 }
-
-// --- Screening Types ---
 
 export interface DimensionAnalysis {
   dimension: string;
