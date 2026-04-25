@@ -37,6 +37,12 @@ venv/
 *.swp
 *.swo
 
+# Agent / AI tooling
+.claude/
+.cursor/
+.aider*
+.windsurf/
+
 # OS
 .DS_Store
 Thumbs.db
