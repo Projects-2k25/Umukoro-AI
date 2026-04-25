@@ -15,7 +15,7 @@ import { User, UserSchema } from '../../common/schemas/user.schema';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET', 'talent-lens-secret'),
+        secret: configService.get<string>('JWT_SECRET', 'umukoro-ai-secret'),
         signOptions: { expiresIn: configService.get<string>('JWT_EXPIRES_IN', '1d') },
       }),
       inject: [ConfigService],

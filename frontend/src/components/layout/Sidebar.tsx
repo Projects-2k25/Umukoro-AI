@@ -38,7 +38,7 @@ export default function Sidebar() {
         </div>
         {!collapsed && (
           <span className="font-semibold text-lg text-gray-900 tracking-tight">
-            TalentLens
+            Umukoro AI
           </span>
         )}
       </div>

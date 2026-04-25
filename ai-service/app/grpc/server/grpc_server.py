@@ -1,5 +1,5 @@
 """
-gRPC Server for TalentLens Screening Service.
+gRPC Server for Umukoro AI Screening Service.
 Runs alongside the FastAPI HTTP server.
 """
 

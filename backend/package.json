@@ -1,7 +1,7 @@
 {
-  "name": "talentlens-backend",
+  "name": "umukoro-ai-backend",
   "version": "1.0.0",
-  "description": "TalentLens AI Screening Backend",
+  "description": "Umukoro AI Screening Backend",
   "private": true,
   "scripts": {
     "build": "nest build",

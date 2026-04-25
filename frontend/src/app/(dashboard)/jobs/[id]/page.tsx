@@ -3,8 +3,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  ArrowLeft, Upload, FileSpreadsheet, FileText, Users, Brain,
-  Play, Loader2, CheckCircle, AlertCircle, Trash2,
+  ArrowLeft, Upload, FileSpreadsheet, FileText, FileJson, ClipboardPaste,
+  Users, Brain, Play, Loader2, CheckCircle, AlertCircle, Trash2, X,
 } from 'lucide-react';
 import StatusBadge from '@/components/shared/StatusBadge';
 import { jobsApi, applicantsApi, screeningsApi } from '@/lib/api';
@@ -23,6 +23,10 @@ export default function JobDetailPage() {
   const [uploadResult, setUploadResult] = useState<any>(null);
   const [screening, setScreening] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [pasteOpen, setPasteOpen] = useState(false);
+  const [pasteText, setPasteText] = useState('');
+  const [pasteError, setPasteError] = useState('');
+  const [pasting, setPasting] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -58,6 +62,42 @@ export default function JobDetailPage() {
     setDragOver(false);
     const file = e.dataTransfer.files[0];
     if (file) handleFileUpload(file);
+  };
+
+  const handlePasteImport = async () => {
+    setPasteError('');
+    let parsed: any;
+    try {
+      parsed = JSON.parse(pasteText);
+    } catch {
+      setPasteError('Invalid JSON. Make sure you pasted a valid JSON array or object.');
+      return;
+    }
+
+    const profiles = Array.isArray(parsed)
+      ? parsed
+      : Array.isArray(parsed?.profiles)
+        ? parsed.profiles
+        : Array.isArray(parsed?.applicants)
+          ? parsed.applicants
+          : null;
+
+    if (!profiles || profiles.length === 0) {
+      setPasteError('JSON must be an array of profiles, or contain a "profiles" or "applicants" array.');
+      return;
+    }
+
+    setPasting(true);
+    try {
+      const { data } = await applicantsApi.importProfiles(id, profiles);
+      setUploadResult({ success: true, imported: data.imported, errors: [] });
+      setPasteOpen(false);
+      setPasteText('');
+      fetchData();
+    } catch (err: any) {
+      setPasteError(err.response?.data?.message || 'Import failed');
+    }
+    setPasting(false);
   };
 
   const handleScreening = async () => {
@@ -105,7 +145,7 @@ export default function JobDetailPage() {
             'inline-flex items-center gap-2 font-semibold py-2.5 px-5 rounded-lg transition-all text-sm',
             applicants.length === 0
               ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 text-white shadow-sm'
+              : 'bg-primary-600 hover:bg-primary-700 text-white shadow-sm'
           )}
         >
           {screening ? <Loader2 className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
@@ -161,8 +201,8 @@ export default function JobDetailPage() {
           >
             <Upload className="w-8 h-8 text-gray-400 mx-auto mb-3" />
             <p className="text-sm font-medium text-gray-700">Drag & drop your file here</p>
-            <p className="text-xs text-gray-500 mt-1">Supports CSV, XLSX, and PDF files (max 10MB)</p>
-            <div className="flex justify-center gap-3 mt-4">
+            <p className="text-xs text-gray-500 mt-1">Supports CSV, XLSX, PDF, and JSON files (max 10MB)</p>
+            <div className="flex justify-center flex-wrap gap-3 mt-4">
               <label className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors">
                 <FileSpreadsheet className="w-4 h-4" />
                 Upload Spreadsheet
@@ -173,6 +213,19 @@ export default function JobDetailPage() {
                 Upload Resume PDF
                 <input type="file" accept=".pdf" className="hidden" onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])} />
               </label>
+              <label className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors">
+                <FileJson className="w-4 h-4" />
+                Upload JSON Profiles
+                <input type="file" accept=".json,application/json" className="hidden" onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])} />
+              </label>
+              <button
+                type="button"
+                onClick={() => { setPasteOpen(true); setPasteError(''); }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors"
+              >
+                <ClipboardPaste className="w-4 h-4" />
+                Paste JSON
+              </button>
             </div>
             {uploading && <p className="text-sm text-primary-600 mt-3 flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Processing file...</p>}
           </div>
@@ -277,6 +330,68 @@ export default function JobDetailPage() {
               </Link>
             ))
           )}
+        </div>
+      )}
+
+      {pasteOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => !pasting && setPasteOpen(false)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <div>
+                <h3 className="text-base font-semibold text-gray-900">Paste JSON Profiles</h3>
+                <p className="text-xs text-gray-500 mt-0.5">Paste a JSON array of profiles, or an object with a &quot;profiles&quot; / &quot;applicants&quot; array.</p>
+              </div>
+              <button onClick={() => !pasting && setPasteOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto px-6 py-4 space-y-3">
+              <textarea
+                value={pasteText}
+                onChange={(e) => setPasteText(e.target.value)}
+                placeholder={`[
+  {
+    "firstName": "Jane",
+    "lastName": "Doe",
+    "email": "jane@example.com",
+    "headline": "Backend Engineer",
+    "location": "Kigali, Rwanda",
+    "skills": [{ "name": "Node.js", "level": "Advanced", "yearsOfExperience": 4 }]
+  }
+]`}
+                className="w-full h-72 font-mono text-xs px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                spellCheck={false}
+              />
+              {pasteError && (
+                <div className="rounded-lg bg-rose-50 text-rose-700 text-sm px-3 py-2 flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <p>{pasteError}</p>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200">
+              <button
+                onClick={() => setPasteOpen(false)}
+                disabled={pasting}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePasteImport}
+                disabled={pasting || !pasteText.trim()}
+                className={cn(
+                  'inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors',
+                  pasting || !pasteText.trim()
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-primary-600 hover:bg-primary-700 text-white'
+                )}
+              >
+                {pasting && <Loader2 className="w-4 h-4 animate-spin" />}
+                {pasting ? 'Importing...' : 'Import Profiles'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

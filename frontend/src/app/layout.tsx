@@ -3,7 +3,7 @@ import './globals.css';
 import { ReduxProvider } from '@/store/provider';
 
 export const metadata: Metadata = {
-  title: 'TalentLens - AI-Powered Talent Screening',
+  title: 'Umukoro AI - AI-Powered Talent Screening',
   description: 'Screen and shortlist job applicants using AI with transparent reasoning',
 };
 

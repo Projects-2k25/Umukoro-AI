@@ -24,7 +24,7 @@ async function bootstrap() {
   );
 
   const config = new DocumentBuilder()
-    .setTitle('TalentLens API')
+    .setTitle('Umukoro AI API')
     .setDescription('AI-Powered Talent Screening API')
     .setVersion('1.0')
     .addBearerAuth()
@@ -34,7 +34,7 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
-  console.log(`TalentLens API running on port ${port}`);
+  console.log(`Umukoro AI API running on port ${port}`);
   console.log(`Swagger docs at http://localhost:${port}/api-docs`);
 }
 bootstrap();

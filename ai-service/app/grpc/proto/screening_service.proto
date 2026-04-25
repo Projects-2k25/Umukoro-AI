@@ -2,27 +2,11 @@ syntax = "proto3";
 
 package screening;
 
-/**
- * TalentLens Screening Service - gRPC Interface
- * AI-powered talent screening and resume extraction.
- *
- * No authentication required - internal services are trusted.
- * The calling service passes job/candidate data after authentication.
- */
 service ScreeningService {
-  // Screen candidates against job requirements, return ranked shortlist
   rpc ScreenCandidates(ScreenCandidatesRequest) returns (ScreenCandidatesResponse);
-
-  // Extract structured profile from resume text
   rpc ExtractResume(ExtractResumeRequest) returns (ExtractResumeResponse);
-
-  // Health check for service monitoring
   rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
 }
-
-// ============================================================================
-// Screening Messages
-// ============================================================================
 
 message SkillInput {
   string name = 1;
@@ -48,36 +32,81 @@ message JobInput {
 
 message CandidateSkill {
   string name = 1;
-  float years_of_experience = 2;
+  string level = 2;
+  float years_of_experience = 3;
 }
 
-message WorkHistoryItem {
-  string title = 1;
-  string company = 2;
+message LanguageItem {
+  string name = 1;
+  string proficiency = 2;
+}
+
+message ExperienceItem {
+  string company = 1;
+  string role = 2;
   string start_date = 3;
   string end_date = 4;
   string description = 5;
+  repeated string technologies = 6;
+  bool is_current = 7;
 }
 
 message EducationItem {
-  string degree = 1;
-  string field = 2;
-  string institution = 3;
-  int32 graduation_year = 4;
+  string institution = 1;
+  string degree = 2;
+  string field_of_study = 3;
+  int32 start_year = 4;
+  int32 end_year = 5;
+}
+
+message CertificationItem {
+  string name = 1;
+  string issuer = 2;
+  string issue_date = 3;
+}
+
+message ProjectItem {
+  string name = 1;
+  string description = 2;
+  repeated string technologies = 3;
+  string role = 4;
+  string link = 5;
+  string start_date = 6;
+  string end_date = 7;
+}
+
+message AvailabilityItem {
+  string status = 1;
+  string type = 2;
+  string start_date = 3;
+}
+
+message SocialLinksItem {
+  string linkedin = 1;
+  string github = 2;
+  string portfolio = 3;
 }
 
 message CandidateInput {
   string id = 1;
   string first_name = 2;
   string last_name = 3;
-  repeated CandidateSkill skills = 4;
-  float total_experience_years = 5;
-  string current_title = 6;
-  string current_company = 7;
-  repeated WorkHistoryItem work_history = 8;
-  repeated EducationItem education = 9;
-  repeated string certifications = 10;
-  string resume_text = 11;
+  string email = 4;
+  string headline = 5;
+  string bio = 6;
+  string location = 7;
+  repeated CandidateSkill skills = 8;
+  repeated LanguageItem languages = 9;
+  repeated ExperienceItem experience = 10;
+  repeated EducationItem education = 11;
+  repeated CertificationItem certifications = 12;
+  repeated ProjectItem projects = 13;
+  AvailabilityItem availability = 14;
+  SocialLinksItem social_links = 15;
+  float total_experience_years = 16;
+  string current_title = 17;
+  string current_company = 18;
+  string resume_text = 19;
 }
 
 message ScreeningWeights {
@@ -137,10 +166,6 @@ message ScreenCandidatesResponse {
   string error = 4;
 }
 
-// ============================================================================
-// Resume Extraction Messages
-// ============================================================================
-
 message ExtractResumeRequest {
   string resume_text = 1;
   string request_id = 2;
@@ -151,20 +176,23 @@ message ExtractResumeResponse {
   string first_name = 2;
   string last_name = 3;
   string email = 4;
-  string phone = 5;
-  repeated CandidateSkill skills = 6;
-  float total_experience_years = 7;
-  string current_title = 8;
-  string current_company = 9;
-  repeated WorkHistoryItem work_history = 10;
+  string headline = 5;
+  string bio = 6;
+  string location = 7;
+  repeated CandidateSkill skills = 8;
+  repeated LanguageItem languages = 9;
+  repeated ExperienceItem experience = 10;
   repeated EducationItem education = 11;
-  repeated string certifications = 12;
-  string error = 13;
+  repeated CertificationItem certifications = 12;
+  repeated ProjectItem projects = 13;
+  AvailabilityItem availability = 14;
+  SocialLinksItem social_links = 15;
+  string phone = 16;
+  float total_experience_years = 17;
+  string current_title = 18;
+  string current_company = 19;
+  string error = 20;
 }
-
-// ============================================================================
-// Health Check Messages
-// ============================================================================
 
 message HealthCheckRequest {
   string service = 1;

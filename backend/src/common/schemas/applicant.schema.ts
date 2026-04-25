@@ -145,16 +145,16 @@ export class Applicant extends Document {
   @Prop({ required: true, trim: true })
   lastName: string;
 
-  @Prop({ required: true, lowercase: true, trim: true })
+  @Prop({ lowercase: true, trim: true, default: '' })
   email: string;
 
-  @Prop({ required: true, trim: true })
+  @Prop({ trim: true, default: '' })
   headline: string;
 
-  @Prop({ trim: true })
+  @Prop({ trim: true, default: '' })
   bio: string;
 
-  @Prop({ required: true, trim: true })
+  @Prop({ trim: true, default: '' })
   location: string;
 
   @Prop({ type: [ApplicantSkill], default: [] })

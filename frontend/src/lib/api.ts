@@ -9,7 +9,7 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('talentlens_token');
+    const token = localStorage.getItem('umukoro_ai_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -21,8 +21,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401 && typeof window !== 'undefined') {
-      localStorage.removeItem('talentlens_token');
-      localStorage.removeItem('talentlens_user');
+      localStorage.removeItem('umukoro_ai_token');
+      localStorage.removeItem('umukoro_ai_user');
       window.location.href = '/login';
     }
     return Promise.reject(error);

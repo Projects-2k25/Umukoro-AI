@@ -185,6 +185,16 @@ class ResumeExtractionRequest(BaseModel):
     resumeText: str
 
 
+class HeaderMappingRequest(BaseModel):
+    headers: list[str]
+    sampleRow: dict = {}
+
+
+class HeaderMappingResponse(BaseModel):
+    mapping: dict = {}
+    notes: str = ""
+
+
 class ExtractedProfile(BaseModel):
     # 3.1 Basic Information
     firstName: str = ""

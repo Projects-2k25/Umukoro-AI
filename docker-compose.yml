@@ -20,8 +20,8 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3000
-      - MONGODB_URI=mongodb://mongodb:27017/talentlens
-      - JWT_SECRET=talentlens-dev-secret-change-in-prod
+      - MONGODB_URI=mongodb://mongodb:27017/umukoro_ai
+      - JWT_SECRET=umukoro-ai-dev-secret-change-in-prod
       - JWT_EXPIRES_IN=7d
       - AI_SERVICE_URL=http://ai-service:8000
       - CLIENT_URL=http://localhost:7001

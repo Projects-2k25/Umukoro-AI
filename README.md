@@ -1,4 +1,4 @@
-# TalentLens — AI-Powered Talent Screening
+# Umukoro AI — AI-Powered Talent Screening
 
 An intelligent recruitment screening tool that uses Google Gemini AI to analyze, score, and rank job applicants with transparent, explainable reasoning.
 
@@ -15,7 +15,7 @@ Built for the **Umurava AI Hackathon** — "Building AI Products for the Human R
 
 ## Architecture
 
-TalentLens is built on a **microservice architecture wired together with gRPC**. Three independently deployable services — a Next.js frontend, a NestJS backend, and a Python AI service — each own a single bounded responsibility, scale independently, and communicate over well-defined contracts: REST/JSON between client and backend, and **gRPC over HTTP/2 (with a JSON/HTTP fallback)** between backend and AI service. MongoDB persists all domain state; the AI service is stateless.
+Umukoro AI is built on a **microservice architecture wired together with gRPC**. Three independently deployable services — a Next.js frontend, a NestJS backend, and a Python AI service — each own a single bounded responsibility, scale independently, and communicate over well-defined contracts: REST/JSON between client and backend, and **gRPC over HTTP/2 (with a JSON/HTTP fallback)** between backend and AI service. MongoDB persists all domain state; the AI service is stateless.
 
 ```
 ┌────────────────────┐    REST/JSON     ┌────────────────────┐    gRPC (HTTP/2)    ┌─────────────────────┐
@@ -214,10 +214,11 @@ GEMINI_API_KEY=your-key docker compose up
 ```
 
 ### Demo Login
-```
-Email: demo@talentlens.ai
-Password: Demo123!
-```
+
+| Field | Value |
+|----------|-----------|
+| Email | `demo@umukoroai.com` |
+| Password | `Demo123!` |
 
 ## Environment Variables
 

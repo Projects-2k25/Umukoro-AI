@@ -116,63 +116,114 @@ export class ApplicantsService {
     if (ext === 'pdf') {
       return this.parsePdf(jobId, file);
     }
+    if (ext === 'json') {
+      return this.parseJson(jobId, file, recruiterId);
+    }
 
-    throw new BadRequestException('Unsupported file type. Use CSV, XLSX, or PDF.');
+    throw new BadRequestException('Unsupported file type. Use CSV, XLSX, PDF, or JSON.');
+  }
+
+  private async parseJson(jobId: string, file: Express.Multer.File, recruiterId: string) {
+    let parsed: any;
+    try {
+      parsed = JSON.parse(file.buffer.toString('utf-8'));
+    } catch {
+      throw new BadRequestException('Invalid JSON file');
+    }
+
+    const profiles = Array.isArray(parsed)
+      ? parsed
+      : Array.isArray(parsed?.profiles)
+        ? parsed.profiles
+        : Array.isArray(parsed?.applicants)
+          ? parsed.applicants
+          : null;
+
+    if (!profiles) {
+      throw new BadRequestException(
+        'JSON must be an array of profiles, or an object with a "profiles" or "applicants" array',
+      );
+    }
+    if (profiles.length === 0) {
+      throw new BadRequestException('No profiles found in JSON');
+    }
+
+    return this.importProfiles(jobId, profiles, recruiterId);
   }
 
   private async parseSpreadsheet(jobId: string, file: Express.Multer.File) {
     const workbook = XLSX.read(file.buffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
-    const rows: any[] = XLSX.utils.sheet_to_json(sheet);
+    const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
     if (!rows.length) throw new BadRequestException('Spreadsheet is empty');
+
+    const headers = Object.keys(rows[0] || {});
+    const headerMap = await this.resolveHeaderMapping(headers, rows[0] || {});
 
     const errors: { row: number; reason: string }[] = [];
     const applicants: any[] = [];
 
     rows.forEach((row, idx) => {
-      const firstName = row.firstName || row.first_name || row.FirstName || row['First Name'] || '';
-      const lastName = row.lastName || row.last_name || row.LastName || row['Last Name'] || '';
+      const get = (canonical: string): string => {
+        for (const [orig, target] of Object.entries(headerMap)) {
+          if (target === canonical && row[orig] != null && row[orig] !== '') {
+            return row[orig].toString().trim();
+          }
+        }
+        return '';
+      };
+
+      let firstName = get('firstName');
+      let lastName = get('lastName');
+      const fullName = get('fullName');
+      if ((!firstName || !lastName) && fullName) {
+        const parts = fullName.split(/\s+/).filter(Boolean);
+        if (!firstName) firstName = parts[0] || '';
+        if (!lastName) lastName = parts.slice(1).join(' ');
+      }
 
       if (!firstName && !lastName) {
         errors.push({ row: idx + 2, reason: 'Missing name' });
         return;
       }
 
-      const skills = (row.skills || row.Skills || '')
-        .toString()
+      const skills = get('skills')
         .split(/[,;]/)
-        .map((s: string) => s.trim())
+        .map((s) => s.trim())
         .filter(Boolean)
-        .map((name: string) => ({ name, level: 'Intermediate', yearsOfExperience: 0 }));
+        .map((name) => ({ name, level: 'Intermediate', yearsOfExperience: 0 }));
+
+      const educationStr = get('education');
+      const experienceYears = parseInt(get('totalExperienceYears') || '0', 10) || 0;
 
       applicants.push({
         jobId: new Types.ObjectId(jobId),
         source: ApplicantSource.CSV_IMPORT,
-        firstName: firstName.toString().trim(),
-        lastName: lastName.toString().trim(),
-        email: (row.email || row.Email || '').toString().trim(),
-        headline: (row.headline || row.Headline || '').toString().trim(),
-        bio: (row.bio || row.Bio || '').toString().trim(),
-        location: (row.location || row.Location || '').toString().trim(),
+        firstName,
+        lastName,
+        email: get('email').toLowerCase(),
+        headline: get('headline'),
+        bio: get('bio'),
+        location: get('location'),
         skills,
         experience: [],
-        education: row.education || row.Education
-          ? [{ degree: 'Bachelor\'s', fieldOfStudy: (row.education || row.Education || '').toString(), institution: '' }]
+        education: educationStr
+          ? [{ degree: "Bachelor's", fieldOfStudy: educationStr, institution: '' }]
           : [],
         certifications: [],
         projects: [],
         availability: { status: 'Available', type: 'Full-time', startDate: '' },
         socialLinks: {
-          linkedin: (row.linkedin || row.LinkedIn || '').toString().trim(),
-          github: (row.github || row.GitHub || '').toString().trim(),
-          portfolio: (row.portfolio || row.Portfolio || '').toString().trim(),
+          linkedin: get('linkedin'),
+          github: get('github'),
+          portfolio: get('portfolio'),
         },
-        phone: (row.phone || row.Phone || '').toString().trim(),
-        totalExperienceYears: parseInt(row.experience || row.Experience || row.experience_years || '0', 10) || 0,
-        currentTitle: (row.title || row.Title || row.currentTitle || '').toString().trim(),
-        currentCompany: (row.company || row.Company || row.currentCompany || '').toString().trim(),
+        phone: get('phone'),
+        totalExperienceYears: experienceYears,
+        currentTitle: get('currentTitle'),
+        currentCompany: get('currentCompany'),
         rawData: row,
       });
     });
@@ -185,6 +236,69 @@ export class ApplicantsService {
     }
 
     return { imported, errors, total: rows.length };
+  }
+
+  private async resolveHeaderMapping(
+    headers: string[],
+    sampleRow: Record<string, any>,
+  ): Promise<Record<string, string>> {
+    const fallback = this.fallbackHeaderMapping(headers);
+
+    try {
+      const aiServiceUrl = this.configService.get<string>(
+        'AI_SERVICE_URL',
+        'http://localhost:8000',
+      );
+      const response = await axios.post(
+        `${aiServiceUrl}/api/v1/map-headers`,
+        { headers, sampleRow },
+        { timeout: 15000 },
+      );
+      const mapping = response.data?.mapping || {};
+      if (Object.keys(mapping).length === 0) return fallback;
+      return { ...fallback, ...mapping };
+    } catch (error: any) {
+      this.logger.warn(
+        `Header-mapping LLM unavailable, using fallback: ${error?.message || error}`,
+      );
+      return fallback;
+    }
+  }
+
+  private fallbackHeaderMapping(headers: string[]): Record<string, string> {
+    const mapping: Record<string, string> = {};
+    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    const rules: Array<{ canonical: string; keys: string[] }> = [
+      { canonical: 'firstName', keys: ['firstname', 'first', 'givenname'] },
+      { canonical: 'lastName', keys: ['lastname', 'last', 'surname', 'familyname'] },
+      { canonical: 'fullName', keys: ['fullname', 'name', 'candidatename', 'applicantname'] },
+      { canonical: 'email', keys: ['email', 'emailaddress', 'mail'] },
+      { canonical: 'phone', keys: ['phone', 'phonenumber', 'mobile', 'tel'] },
+      { canonical: 'headline', keys: ['headline', 'title', 'jobtitle'] },
+      { canonical: 'bio', keys: ['bio', 'about', 'summary'] },
+      { canonical: 'location', keys: ['location', 'city', 'country', 'address'] },
+      { canonical: 'skills', keys: ['skills', 'skillset', 'expertise', 'technologies'] },
+      { canonical: 'totalExperienceYears', keys: ['experience', 'experienceyears', 'yearsofexperience', 'yearsexperience', 'yoe'] },
+      { canonical: 'currentTitle', keys: ['currenttitle', 'position', 'currentposition', 'role'] },
+      { canonical: 'currentCompany', keys: ['currentcompany', 'company', 'employer'] },
+      { canonical: 'education', keys: ['education', 'degree', 'qualification'] },
+      { canonical: 'linkedin', keys: ['linkedin', 'linkedinurl'] },
+      { canonical: 'github', keys: ['github', 'githuburl'] },
+      { canonical: 'portfolio', keys: ['portfolio', 'website', 'portfoliourl'] },
+    ];
+
+    for (const header of headers) {
+      const n = norm(header);
+      for (const { canonical, keys } of rules) {
+        if (mapping[header]) break;
+        if (keys.some((k) => n === k)) {
+          mapping[header] = canonical;
+          break;
+        }
+      }
+    }
+    return mapping;
   }
 
   private async parsePdf(jobId: string, file: Express.Multer.File) {

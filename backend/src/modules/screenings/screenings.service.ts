@@ -142,15 +142,18 @@ export class ScreeningsService {
 
       return this.findById(screening._id.toString());
     } catch (error: any) {
+      const aiDetail = error?.response?.data?.detail;
+      const friendly = typeof aiDetail === 'string' ? aiDetail : (error.message || 'AI service error');
+
       await this.screeningModel.findByIdAndUpdate(screening._id, {
         status: ScreeningStatus.FAILED,
-        error: error.message || 'AI service error',
+        error: friendly,
         processingTimeMs: Date.now() - startTime,
       });
 
       await this.jobModel.findByIdAndUpdate(job._id, { status: JobStatus.OPEN });
 
-      throw new BadRequestException(`Screening failed: ${error.message}`);
+      throw new BadRequestException(friendly);
     }
   }
 

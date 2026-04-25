@@ -25,7 +25,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="card-stripe p-6">
-        <h2 className="text-base font-semibold text-gray-900 mb-2">About TalentLens</h2>
+        <h2 className="text-base font-semibold text-gray-900 mb-2">About Umukoro AI</h2>
         <p className="text-sm text-gray-500">
           AI-powered talent screening tool built for the Umurava AI Hackathon.
           Uses Google Gemini API to analyze, score, and rank job applicants with transparent reasoning.

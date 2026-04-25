@@ -26,6 +26,27 @@ logger = logging.getLogger(__name__)
 BATCH_SIZE = 10
 
 
+class LLMUnavailableError(Exception):
+    """Raised when the configured LLM provider rejects the request (auth, quota, billing)."""
+
+
+def _friendly_llm_error(exc: Exception) -> str:
+    msg = str(exc).lower()
+    if "credit balance" in msg or "billing" in msg:
+        return (
+            "The configured LLM provider has insufficient credits. "
+            "Add credits to your Anthropic or Gemini account, or switch LLM_PROVIDER in the AI service .env."
+        )
+    if "quota" in msg or "rate" in msg or "resource_exhausted" in msg or "429" in msg:
+        return (
+            "The LLM provider rate limit / free-tier quota was exceeded. "
+            "Wait a moment and retry, or switch to a paid plan / different provider."
+        )
+    if "api key" in msg or "unauthorized" in msg or "401" in msg or "invalid_api_key" in msg:
+        return "The LLM API key is invalid or missing. Check ANTHROPIC_API_KEY or GEMINI_API_KEY in the AI service .env."
+    return f"LLM provider error: {exc}"
+
+
 class ScreeningWorkflowService:
     def __init__(self):
         self.llm = get_llm()
@@ -89,10 +110,13 @@ class ScreeningWorkflowService:
             state["job"], batch, state["config"]
         )
 
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You are an expert talent acquisition specialist."),
-            HumanMessage(content=prompt_text),
-        ])
+        try:
+            response = await self.llm.ainvoke([
+                SystemMessage(content="You are an expert talent acquisition specialist."),
+                HumanMessage(content=prompt_text),
+            ])
+        except Exception as e:
+            raise LLMUnavailableError(_friendly_llm_error(e)) from e
 
         result = json.loads(self._clean_json(response.content))
         if isinstance(result, dict) and "evaluations" in result:
@@ -158,10 +182,13 @@ class ScreeningWorkflowService:
 
         prompt_text = self._build_reasoning_prompt(job, shortlisted, candidates_map)
 
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You are a recruiter-facing summary writer."),
-            HumanMessage(content=prompt_text),
-        ])
+        try:
+            response = await self.llm.ainvoke([
+                SystemMessage(content="You are a recruiter-facing summary writer."),
+                HumanMessage(content=prompt_text),
+            ])
+        except Exception as e:
+            raise LLMUnavailableError(_friendly_llm_error(e)) from e
 
         result = json.loads(self._clean_json(response.content))
         if isinstance(result, dict) and "summaries" in result:

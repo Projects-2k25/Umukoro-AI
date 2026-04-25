@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/talentlens';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/umukoro_ai';
 
 const userSchema = new mongoose.Schema({
   email: String, password: String, firstName: String, lastName: String,
@@ -43,7 +43,7 @@ async function seed() {
   // Create demo recruiter
   const password = await bcrypt.hash('Demo123!', 12);
   const recruiter = await User.create({
-    email: 'demo@talentlens.ai',
+    email: 'demo@umukoroai.com',
     password,
     firstName: 'Demo',
     lastName: 'Recruiter',
@@ -51,7 +51,7 @@ async function seed() {
     company: 'TechCorp Rwanda',
     isActive: true,
   });
-  console.log('Created recruiter: demo@talentlens.ai / Demo123!');
+  console.log('Created recruiter: demo@umukoroai.com / Demo123!');
 
   // Create sample jobs
   const jobs = await Job.insertMany([
@@ -141,7 +141,7 @@ async function seed() {
   await Job.findByIdAndUpdate(dsJobId, { totalApplicants: dsApplicants.length });
 
   console.log(`Created ${frontendApplicants.length + dsApplicants.length} applicants`);
-  console.log('\nSeed complete! Login with: demo@talentlens.ai / Demo123!');
+  console.log('\nSeed complete! Login with: demo@umukoroai.com / Demo123!');
 
   await mongoose.disconnect();
 }

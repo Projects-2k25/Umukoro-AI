@@ -286,7 +286,7 @@ class ScreeningServicer(screening_service_pb2_grpc.ScreeningServiceServicer):
         return screening_service_pb2.HealthCheckResponse(
             healthy=True,
             status="SERVING",
-            service="talentlens-ai-service",
+            service="umukoro-ai-service",
             version="1.0.0",
             message="Screening service is healthy",
         )

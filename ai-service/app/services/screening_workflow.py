@@ -10,6 +10,8 @@ from app.schemas.screening import (
     ScreeningResponse,
     ResumeExtractionRequest,
     ExtractedProfile,
+    HeaderMappingRequest,
+    HeaderMappingResponse,
 )
 from app.services.screening_graph import get_screening_service
 
@@ -56,3 +58,70 @@ Return ONLY the JSON object."""
 
     result = json.loads(text.strip())
     return ExtractedProfile(**result)
+
+
+CANONICAL_FIELDS = [
+    "firstName", "lastName", "fullName", "email", "phone",
+    "headline", "bio", "location",
+    "skills", "languages",
+    "totalExperienceYears", "currentTitle", "currentCompany",
+    "education", "linkedin", "github", "portfolio",
+]
+
+
+async def map_headers(request: HeaderMappingRequest) -> HeaderMappingResponse:
+    """Use the LLM to map arbitrary spreadsheet headers to our canonical fields.
+
+    Why: users upload sheets with any column names ("Full Name", "Years Exp",
+    "Candidate Email", "LinkedIn URL"). Hardcoded matching fails; one LLM call
+    per upload returns a mapping the parser then applies to every row.
+    """
+    if not request.headers:
+        return HeaderMappingResponse(mapping={})
+
+    llm = get_llm()
+
+    prompt = f"""You are mapping spreadsheet column headers to a canonical applicant schema.
+
+Available canonical fields (target keys):
+{", ".join(CANONICAL_FIELDS)}
+
+Notes:
+- "fullName" is used when a single column contains both first and last name; the parser will split it.
+- "skills" should be a comma- or semicolon-separated list of skills.
+- "totalExperienceYears" is a number of years of experience.
+- For social links, use "linkedin", "github", "portfolio".
+- If a header has no good canonical match, omit it from the mapping.
+
+Spreadsheet headers:
+{json.dumps(request.headers)}
+
+Sample row (header -> value, for disambiguation):
+{json.dumps(request.sampleRow, default=str)[:1500]}
+
+Return ONLY a JSON object of the form:
+{{"mapping": {{"<original_header>": "<canonical_field>", ...}}}}
+"""
+
+    response = await llm.ainvoke([HumanMessage(content=prompt)])
+    text = response.content.strip()
+    if text.startswith("```json"):
+        text = text[7:]
+    if text.startswith("```"):
+        text = text[3:]
+    if text.endswith("```"):
+        text = text[:-3]
+
+    try:
+        parsed = json.loads(text.strip())
+        mapping = parsed.get("mapping", {}) if isinstance(parsed, dict) else {}
+    except Exception as e:
+        logger.warning(f"Header mapping LLM returned invalid JSON: {e}")
+        mapping = {}
+
+    cleaned = {
+        str(k): str(v)
+        for k, v in mapping.items()
+        if isinstance(v, str) and v in CANONICAL_FIELDS
+    }
+    return HeaderMappingResponse(mapping=cleaned)

@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'talentlens-backend',
+      name: 'umukoro-ai-backend',
       script: 'dist/main.js',
       instances: 1,
       exec_mode: 'fork',

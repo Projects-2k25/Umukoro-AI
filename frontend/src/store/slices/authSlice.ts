@@ -25,8 +25,8 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       state.isLoading = false;
       if (typeof window !== 'undefined') {
-        localStorage.setItem('talentlens_token', action.payload.accessToken);
-        localStorage.setItem('talentlens_user', JSON.stringify(action.payload.user));
+        localStorage.setItem('umukoro_ai_token', action.payload.accessToken);
+        localStorage.setItem('umukoro_ai_user', JSON.stringify(action.payload.user));
       }
     },
     logout: (state) => {
@@ -35,14 +35,14 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.isLoading = false;
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('talentlens_token');
-        localStorage.removeItem('talentlens_user');
+        localStorage.removeItem('umukoro_ai_token');
+        localStorage.removeItem('umukoro_ai_user');
       }
     },
     hydrateAuth: (state) => {
       if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('talentlens_token');
-        const userStr = localStorage.getItem('talentlens_user');
+        const token = localStorage.getItem('umukoro_ai_token');
+        const userStr = localStorage.getItem('umukoro_ai_user');
         if (token && userStr) {
           state.token = token;
           state.user = JSON.parse(userStr);
