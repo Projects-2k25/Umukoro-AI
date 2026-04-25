@@ -15,7 +15,7 @@ Built for the **Umurava AI Hackathon** — "Building AI Products for the Human R
 
 ## Architecture
 
-TalentLens is a polyglot, three-tier system. The frontend talks to the backend over HTTPS/JSON, and the backend talks to the AI service over **gRPC** (with HTTP/JSON as a fallback). MongoDB persists all domain state; the AI service is stateless.
+TalentLens is built on a **microservice architecture wired together with gRPC**. Three independently deployable services — a Next.js frontend, a NestJS backend, and a Python AI service — each own a single bounded responsibility, scale independently, and communicate over well-defined contracts: REST/JSON between client and backend, and **gRPC over HTTP/2 (with a JSON/HTTP fallback)** between backend and AI service. MongoDB persists all domain state; the AI service is stateless.
 
 ```
 ┌────────────────────┐    REST/JSON     ┌────────────────────┐    gRPC (HTTP/2)    ┌─────────────────────┐
