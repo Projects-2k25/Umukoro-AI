@@ -2,11 +2,10 @@ module.exports = {
   apps: [
     {
       name: 'talentlens-frontend',
-      script: 'npm',
-      args: 'run start -- -p 7001',
+      script: 'node_modules/next/dist/bin/next',
+      args: 'start -p 7001',
       instances: 1,
       exec_mode: 'fork',
-      interpreter: 'none',
       env: {
         NODE_ENV: 'production',
         PORT: 7001,
