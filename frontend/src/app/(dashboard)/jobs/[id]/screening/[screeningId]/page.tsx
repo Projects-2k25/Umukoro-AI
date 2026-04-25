@@ -28,10 +28,31 @@ export default function ScreeningResultsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
-    screeningsApi.get(screeningId).then(({ data }) => {
-      setScreening(data.screening);
-      setResults(data.results || []);
-    }).catch(() => {}).finally(() => setLoading(false));
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const poll = async () => {
+      try {
+        const { data } = await screeningsApi.get(screeningId);
+        if (cancelled) return;
+        setScreening(data.screening);
+        setResults(data.results || []);
+        setLoading(false);
+
+        const status = data.screening?.status;
+        if (status === 'PROCESSING' || status === 'PENDING') {
+          timer = setTimeout(poll, 2500);
+        }
+      } catch {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    poll();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
   }, [screeningId]);
 
   if (loading) {
@@ -48,41 +69,88 @@ export default function ScreeningResultsPage() {
 
   const jobTitle = typeof screening.jobId === 'object' ? (screening.jobId as any).title : 'Job';
   const topScore = results.length > 0 ? results[0].overallScore : 0;
+  const isRunning = screening.status === 'PROCESSING' || screening.status === 'PENDING';
+  const isFailed = screening.status === 'FAILED';
+  const batchesDone = (screening as any).progressBatchesDone || 0;
+  const batchesTotal = (screening as any).progressBatchesTotal || 0;
+  const candidatesDone = (screening as any).progressCandidatesDone || 0;
+  const total = screening.totalCandidatesEvaluated || 0;
+  const pct = batchesTotal > 0
+    ? Math.min(99, Math.round((batchesDone / batchesTotal) * 100))
+    : (total > 0 ? Math.min(99, Math.round((candidatesDone / total) * 100)) : 0);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start gap-3">
-        <Link href={`/jobs/${id}`} className="p-2 hover:bg-gray-100 rounded-md transition-colors mt-0.5">
+      <div className="flex items-start gap-2 sm:gap-3">
+        <Link href={`/jobs/${id}`} className="p-2 hover:bg-gray-100 rounded-md transition-colors mt-0.5 shrink-0">
           <ArrowLeft className="w-4 h-4 text-gray-600" />
         </Link>
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">Screening results</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-lg sm:text-xl font-semibold text-gray-900">Screening results</h1>
+          <p className="text-xs sm:text-sm text-gray-500 mt-0.5 wrap-break-word">
             {jobTitle} · {formatDate(screening.createdAt)} · {screening.totalCandidatesEvaluated} candidates
             {screening.processingTimeMs > 0 && ` · ${(screening.processingTimeMs / 1000).toFixed(1)}s`}
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 border border-gray-200 rounded-md divide-x divide-gray-200">
+      {isRunning && (
+        <div className="border border-blue-200 bg-blue-50 rounded-md p-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium text-blue-900">
+              Screening in progress
+              {batchesTotal > 0 && ` · batch ${batchesDone}/${batchesTotal}`}
+              {candidatesDone > 0 && ` · ${Math.min(candidatesDone, total)}/${total} candidates evaluated`}
+            </p>
+            <span className="text-xs font-mono tabular-nums text-blue-700">{pct}%</span>
+          </div>
+          <div className="h-2 w-full bg-blue-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-blue-600 transition-all duration-500"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <p className="text-xs text-blue-700 mt-2">
+            This page will update automatically. You can safely leave and come back.
+          </p>
+        </div>
+      )}
+
+      {isFailed && (
+        <div className="border border-red-200 bg-red-50 rounded-md p-4">
+          <p className="text-sm font-medium text-red-900">Screening failed</p>
+          <p className="text-xs text-red-700 mt-1">{(screening as any).error || 'Unknown error'}</p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 border border-gray-200 rounded-md overflow-hidden">
         {[
           { label: 'Evaluated', value: screening.totalCandidatesEvaluated },
           { label: 'Shortlisted', value: results.length },
           { label: 'Top score', value: `${topScore}` },
           { label: 'Average', value: `${screening.averageMatchScore}` },
-        ].map((m) => (
-          <div key={m.label} className="px-5 py-4">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">{m.label}</p>
-            <p className="text-2xl font-semibold text-gray-900 mt-1 font-mono tabular-nums">{m.value}</p>
+        ].map((m, i) => (
+          <div
+            key={m.label}
+            className={cn(
+              'px-4 sm:px-5 py-3 sm:py-4',
+              i % 2 === 1 ? 'border-l border-gray-200' : '',
+              'lg:border-l',
+              i === 0 ? 'lg:border-l-0' : '',
+              i >= 2 ? 'border-t border-gray-200 lg:border-t-0' : ''
+            )}
+          >
+            <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">{m.label}</p>
+            <p className="text-xl sm:text-2xl font-semibold text-gray-900 mt-1 font-mono tabular-nums">{m.value}</p>
           </div>
         ))}
       </div>
 
       {results.length > 0 && (
-        <div className="border border-gray-200 rounded-md p-5">
-          <div className="flex items-baseline justify-between mb-4">
+        <div className="border border-gray-200 rounded-md p-3 sm:p-5">
+          <div className="flex items-baseline justify-between mb-4 gap-2">
             <h2 className="text-sm font-semibold text-gray-900">Score distribution</h2>
-            <p className="text-xs text-gray-500">Overall match, top {results.length}</p>
+            <p className="text-xs text-gray-500">Top {results.length}</p>
           </div>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={results.map((r) => {
@@ -127,9 +195,9 @@ export default function ScreeningResultsPage() {
               <div key={result._id}>
                 <button
                   onClick={() => setExpandedId(isExpanded ? null : result._id)}
-                  className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50 transition-colors text-left"
+                  className="w-full flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-3 sm:py-3.5 hover:bg-gray-50 transition-colors text-left"
                 >
-                  <span className="text-sm font-mono tabular-nums text-gray-500 w-6">
+                  <span className="text-sm font-mono tabular-nums text-gray-500 w-5 sm:w-6 shrink-0">
                     {result.rank}.
                   </span>
 
@@ -154,18 +222,22 @@ export default function ScreeningResultsPage() {
                     </span>
                   </div>
 
-                  <span className={cn('px-2 py-0.5 rounded text-xs font-medium', recStyle.bg, recStyle.text)}>
+                  <span className={cn('lg:hidden text-sm font-semibold font-mono tabular-nums', getScoreColor(result.overallScore))}>
+                    {result.overallScore}
+                  </span>
+
+                  <span className={cn('px-2 py-0.5 rounded text-xs font-medium shrink-0', recStyle.bg, recStyle.text)}>
                     {recStyle.label}
                   </span>
 
                   {isExpanded
-                    ? <ChevronUp className="w-4 h-4 text-gray-400" />
-                    : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                    ? <ChevronUp className="w-4 h-4 text-gray-400 shrink-0" />
+                    : <ChevronDown className="w-4 h-4 text-gray-400 shrink-0" />}
                 </button>
 
                 {isExpanded && (
-                  <div className="px-5 py-5 bg-gray-50/60 border-t border-gray-200">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <div className="px-3 sm:px-5 py-4 sm:py-5 bg-gray-50/60 border-t border-gray-200">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
                       <div>
                         <p className="text-xs text-gray-500 uppercase tracking-wide mb-3">Match profile</p>
                         <ResponsiveContainer width="100%" height={200}>
@@ -221,7 +293,7 @@ export default function ScreeningResultsPage() {
                             <ul className="space-y-1.5">
                               {result.strengths.map((s, i) => (
                                 <li key={i} className="text-xs text-gray-700 flex items-start gap-2 leading-relaxed">
-                                  <Check className="w-3.5 h-3.5 text-emerald-600 mt-0.5 flex-shrink-0" />
+                                  <Check className="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0" />
                                   {s}
                                 </li>
                               ))}
@@ -235,7 +307,7 @@ export default function ScreeningResultsPage() {
                             <ul className="space-y-1.5">
                               {result.gaps.map((g, i) => (
                                 <li key={i} className="text-xs text-gray-700 flex items-start gap-2 leading-relaxed">
-                                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 mt-0.5 flex-shrink-0" />
+                                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 mt-0.5 shrink-0" />
                                   {g}
                                 </li>
                               ))}

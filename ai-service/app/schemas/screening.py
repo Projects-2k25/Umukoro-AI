@@ -132,6 +132,7 @@ class ScreeningRequest(BaseModel):
     job: JobInput
     candidates: list[CandidateInput]
     config: ScreeningConfigInput = ScreeningConfigInput()
+    screeningId: Optional[str] = None
 
 
 class DimensionAnalysis(BaseModel):

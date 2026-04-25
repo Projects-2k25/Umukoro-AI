@@ -4,6 +4,7 @@ from datetime import datetime
 
 from app.grpc.generated import screening_service_pb2, screening_service_pb2_grpc
 from app.services.screening_workflow import run_screening, extract_resume
+from app.services.progress_reporter import make_progress_callback
 from app.schemas.screening import (
     ScreeningRequest,
     JobInput,
@@ -150,8 +151,16 @@ class ScreeningServicer(screening_service_pb2_grpc.ScreeningServiceServicer):
                 job=job, candidates=candidates, config=config,
             )
 
+            # The backend passes the screeningId via request_id (Mongo ObjectIds
+            # are 24-char hex). Anything that doesn't look like one is treated
+            # as a synthetic id and progress reporting is skipped.
+            screening_id = request.request_id if (
+                request.request_id and len(request.request_id) == 24 and all(c in "0123456789abcdef" for c in request.request_id.lower())
+            ) else None
+            progress_cb = make_progress_callback(screening_id)
+
             # Run the screening workflow
-            result = await run_screening(screening_request)
+            result = await run_screening(screening_request, progress_cb=progress_cb)
 
             # Map back to gRPC response
             grpc_results = []

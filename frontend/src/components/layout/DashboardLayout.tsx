@@ -1,5 +1,5 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector, useDispatch } from 'react-redux';
 import Sidebar from './Sidebar';
@@ -11,6 +11,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const dispatch = useDispatch();
   const router = useRouter();
   const { isAuthenticated, isLoading } = useSelector((state: RootState) => state.auth);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     dispatch(hydrateAuth());
@@ -34,10 +35,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Sidebar />
-      <div className="ml-60">
-        <Header />
-        <main className="p-6">
+      <Sidebar mobileOpen={mobileOpen} onCloseMobile={() => setMobileOpen(false)} />
+      <div className="lg:ml-60">
+        <Header onOpenMobile={() => setMobileOpen(true)} />
+        <main className="p-4 sm:p-6">
           {children}
         </main>
       </div>

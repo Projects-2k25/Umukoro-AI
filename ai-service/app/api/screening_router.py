@@ -10,6 +10,7 @@ from app.schemas.screening import (
 )
 from app.services.screening_graph import LLMUnavailableError, _friendly_llm_error
 from app.services.screening_workflow import run_screening, extract_resume, map_headers
+from app.services.progress_reporter import make_progress_callback
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -19,9 +20,11 @@ router = APIRouter()
 async def screen_candidates(request: ScreeningRequest):
     try:
         logger.info(
-            f"Screening {len(request.candidates)} candidates for '{request.job.title}'"
+            f"Screening {len(request.candidates)} candidates for '{request.job.title}' "
+            f"(screeningId={request.screeningId})"
         )
-        result = await run_screening(request)
+        progress_cb = make_progress_callback(request.screeningId)
+        result = await run_screening(request, progress_cb=progress_cb)
         logger.info(
             f"Screening complete: {len(result.results)} shortlisted in {result.metadata.processingTimeMs}ms"
         )

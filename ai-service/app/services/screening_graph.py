@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import time
@@ -23,7 +24,9 @@ from app.config.settings import settings
 
 logger = logging.getLogger(__name__)
 
-BATCH_SIZE = 10
+BATCH_SIZE = int(getattr(settings, "SCREENING_BATCH_SIZE", 20) or 20)
+MAX_CONCURRENT_BATCHES = int(getattr(settings, "SCREENING_MAX_CONCURRENCY", 6) or 6)
+PER_BATCH_RETRIES = 2
 
 
 class LLMUnavailableError(Exception):
@@ -56,23 +59,14 @@ class ScreeningWorkflowService:
     def _build_workflow(self) -> StateGraph:
         workflow = StateGraph(ScreeningGraphState)
 
-        workflow.add_node("batch_evaluate", self._batch_evaluate)
+        workflow.add_node("evaluate_all", self._evaluate_all)
         workflow.add_node("compute_scores", self._compute_scores)
         workflow.add_node("rank_shortlist", self._rank_shortlist)
         workflow.add_node("generate_reasoning", self._generate_reasoning)
         workflow.add_node("build_response", self._build_response)
 
-        workflow.set_entry_point("batch_evaluate")
-
-        workflow.add_conditional_edges(
-            "batch_evaluate",
-            self._route_after_batch,
-            {
-                "batch_evaluate": "batch_evaluate",
-                "compute_scores": "compute_scores",
-            },
-        )
-
+        workflow.set_entry_point("evaluate_all")
+        workflow.add_edge("evaluate_all", "compute_scores")
         workflow.add_edge("compute_scores", "rank_shortlist")
 
         workflow.add_conditional_edges(
@@ -89,51 +83,90 @@ class ScreeningWorkflowService:
 
         return workflow.compile()
 
-    def _route_after_batch(self, state: ScreeningGraphState) -> str:
-        if state.get("all_batches_done", False):
-            return "compute_scores"
-        return "batch_evaluate"
-
     def _route_after_ranking(self, state: ScreeningGraphState) -> str:
         if state.get("skip_reasoning", False):
             return "build_response"
         return "generate_reasoning"
 
-    async def _batch_evaluate(self, state: ScreeningGraphState) -> dict:
-        idx = state.get("current_batch_index", 0)
+    async def _evaluate_one_batch(
+        self,
+        batch_idx: int,
+        batch: list,
+        job,
+        config,
+        semaphore: asyncio.Semaphore,
+        progress_cb,
+        total_batches: int,
+    ) -> list[dict]:
+        async with semaphore:
+            prompt_text = self._build_evaluation_prompt(job, batch, config)
+            last_err: Optional[Exception] = None
+            for attempt in range(PER_BATCH_RETRIES + 1):
+                try:
+                    response = await self.llm.ainvoke([
+                        SystemMessage(content="You are an expert talent acquisition specialist."),
+                        HumanMessage(content=prompt_text),
+                    ])
+                    parsed = json.loads(self._clean_json(response.content))
+                    if isinstance(parsed, dict) and "evaluations" in parsed:
+                        parsed = parsed["evaluations"]
+                    if not isinstance(parsed, list):
+                        parsed = [parsed]
+
+                    if progress_cb:
+                        try:
+                            await progress_cb(batch_idx, total_batches, len(batch))
+                        except Exception:
+                            logger.debug("progress_cb raised; ignoring", exc_info=True)
+
+                    logger.info(
+                        f"Batch {batch_idx + 1}/{total_batches} evaluated ({len(batch)} candidates)"
+                    )
+                    return parsed
+                except Exception as e:
+                    last_err = e
+                    msg = str(e).lower()
+                    transient = any(s in msg for s in ("timeout", "rate", "quota", "resource_exhausted", "429", "503", "unavailable"))
+                    if attempt < PER_BATCH_RETRIES and transient:
+                        backoff = 2 ** attempt
+                        logger.warning(
+                            f"Batch {batch_idx + 1} attempt {attempt + 1} failed ({e}); retrying in {backoff}s"
+                        )
+                        await asyncio.sleep(backoff)
+                        continue
+                    break
+            raise LLMUnavailableError(_friendly_llm_error(last_err)) from last_err
+
+    async def _evaluate_all(self, state: ScreeningGraphState) -> dict:
         candidates = state["candidates"]
-        batch = candidates[idx * BATCH_SIZE : (idx + 1) * BATCH_SIZE]
+        if not candidates:
+            return {"evaluations": []}
 
-        logger.info(f"Evaluating batch {idx + 1} ({len(batch)} candidates)")
+        batches = [
+            candidates[i : i + BATCH_SIZE]
+            for i in range(0, len(candidates), BATCH_SIZE)
+        ]
+        total_batches = len(batches)
+        semaphore = asyncio.Semaphore(MAX_CONCURRENT_BATCHES)
+        progress_cb = state.get("progress_cb")
 
-        prompt_text = self._build_evaluation_prompt(
-            state["job"], batch, state["config"]
+        logger.info(
+            f"Evaluating {len(candidates)} candidates in {total_batches} batches "
+            f"(batch_size={BATCH_SIZE}, max_concurrency={MAX_CONCURRENT_BATCHES})"
         )
 
-        try:
-            response = await self.llm.ainvoke([
-                SystemMessage(content="You are an expert talent acquisition specialist."),
-                HumanMessage(content=prompt_text),
-            ])
-        except Exception as e:
-            raise LLMUnavailableError(_friendly_llm_error(e)) from e
+        tasks = [
+            self._evaluate_one_batch(
+                idx, batch, state["job"], state["config"],
+                semaphore, progress_cb, total_batches,
+            )
+            for idx, batch in enumerate(batches)
+        ]
 
-        result = json.loads(self._clean_json(response.content))
-        if isinstance(result, dict) and "evaluations" in result:
-            result = result["evaluations"]
-        if not isinstance(result, list):
-            result = [result]
+        results_per_batch = await asyncio.gather(*tasks, return_exceptions=False)
+        evaluations = [ev for batch_evals in results_per_batch for ev in batch_evals]
 
-        existing = state.get("evaluations", [])
-        all_evals = existing + result
-        next_idx = idx + 1
-        all_done = (next_idx * BATCH_SIZE) >= len(candidates)
-
-        return {
-            "evaluations": all_evals,
-            "current_batch_index": next_idx,
-            "all_batches_done": all_done,
-        }
+        return {"evaluations": evaluations, "all_batches_done": True}
 
     async def _compute_scores(self, state: ScreeningGraphState) -> dict:
         weights = state["config"].weights
@@ -265,67 +298,52 @@ class ScreeningWorkflowService:
         skills_str = (
             ", ".join(
                 [
-                    f"{s.name} ({s.level}, {s.yearsOfExperience}yr)"
-                    for s in candidate.skills[:15]
+                    f"{s.name}({s.yearsOfExperience}y)"
+                    for s in candidate.skills[:12]
                 ]
             )
-            or "None listed"
-        )
-
-        languages_str = (
-            ", ".join(
-                [f"{l.name} ({l.proficiency})" for l in candidate.languages[:5]]
-            )
-            if candidate.languages
-            else "None listed"
+            or "None"
         )
 
         edu_str = (
-            ", ".join(
+            "; ".join(
                 [
-                    f"{e.degree} in {e.fieldOfStudy} from {e.institution}"
-                    for e in candidate.education[:3]
+                    f"{e.degree} {e.fieldOfStudy}".strip()
+                    for e in candidate.education[:2]
+                    if e.degree or e.fieldOfStudy
                 ]
             )
-            or "None listed"
+            or "None"
         )
 
         exp_str = ""
         for w in candidate.experience[:3]:
-            techs = f" [{', '.join(w.technologies[:5])}]" if w.technologies else ""
-            current = " (Current)" if w.isCurrent else ""
-            exp_str += f"\n    - {w.role} at {w.company}{current}{techs}"
-
-        certs_str = (
-            ", ".join([c.name for c in candidate.certifications[:5] if c.name])
-            or "None"
-        )
+            current = "*" if w.isCurrent else ""
+            exp_str += f" | {w.role}@{w.company}{current}"
 
         projects_str = ""
-        for p in candidate.projects[:3]:
-            techs = f" [{', '.join(p.technologies[:5])}]" if p.technologies else ""
-            projects_str += f"\n    - {p.name}: {p.description[:100] if p.description else 'N/A'}{techs}"
+        for p in candidate.projects[:2]:
+            techs = f"[{','.join(p.technologies[:4])}]" if p.technologies else ""
+            projects_str += f" | {p.name}{techs}"
 
-        availability_str = "N/A"
-        if candidate.availability:
-            availability_str = f"{candidate.availability.status}, {candidate.availability.type}"
-
+        has_structured = bool(
+            candidate.skills or candidate.experience or candidate.education
+        )
         resume_excerpt = ""
-        if candidate.resumeText:
-            resume_excerpt = f"\n  Resume excerpt: {candidate.resumeText[:500]}"
+        if candidate.resumeText and not has_structured:
+            resume_excerpt = f"\n  Resume: {candidate.resumeText[:400]}"
 
-        return f"""### Candidate #{idx}: {candidate.firstName} {candidate.lastName} (ID: {candidate.id})
-  - Headline: {candidate.headline or 'N/A'}
-  - Location: {candidate.location or 'N/A'}
-  - Current Role: {candidate.currentTitle or 'N/A'} at {candidate.currentCompany or 'N/A'}
-  - Total Experience: {candidate.totalExperienceYears} years
-  - Skills: {skills_str}
-  - Languages: {languages_str}
-  - Education: {edu_str}
-  - Work Experience:{exp_str or ' None listed'}
-  - Certifications: {certs_str}
-  - Projects:{projects_str or ' None listed'}
-  - Availability: {availability_str}{resume_excerpt}"""
+        return (
+            f"#{idx} {candidate.firstName} {candidate.lastName} (ID:{candidate.id})\n"
+            f"  Title: {candidate.currentTitle or 'N/A'} | "
+            f"Exp: {candidate.totalExperienceYears}y | "
+            f"Loc: {candidate.location or 'N/A'}\n"
+            f"  Skills: {skills_str}\n"
+            f"  Edu: {edu_str}\n"
+            f"  Work:{exp_str or ' None'}\n"
+            f"  Projects:{projects_str or ' None'}"
+            f"{resume_excerpt}"
+        )
 
     def _build_evaluation_prompt(self, job, batch, config) -> str:
         formatted_candidates = "\n\n".join(
@@ -338,7 +356,7 @@ class ScreeningWorkflowService:
 
         prompt = BATCH_EVALUATION_PROMPT.format(
             job_title=job.title,
-            job_description=job.description[:2000],
+            job_description=job.description[:1500],
             formatted_skills=self._format_skills(job),
             experience_level=job.experienceLevel,
             min_years=job.minExperienceYears,
@@ -411,7 +429,7 @@ Return ONLY the JSON array."""
             text = text[:-3]
         return text.strip()
 
-    async def run(self, request: ScreeningRequest) -> ScreeningResponse:
+    async def run(self, request: ScreeningRequest, progress_cb=None) -> ScreeningResponse:
         start_time = time.time()
         candidates_map = {c.id: c for c in request.candidates}
 
@@ -427,6 +445,7 @@ Return ONLY the JSON array."""
             "skip_reasoning": False,
             "results": [],
             "error": None,
+            "progress_cb": progress_cb,
         }
 
         try:

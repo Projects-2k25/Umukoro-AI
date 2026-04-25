@@ -1,4 +1,4 @@
-from typing import TypedDict, Optional
+from typing import Any, Callable, TypedDict, Optional
 
 from app.schemas.screening import (
     JobInput,
@@ -8,7 +8,7 @@ from app.schemas.screening import (
 )
 
 
-class ScreeningGraphState(TypedDict):
+class ScreeningGraphState(TypedDict, total=False):
     job: JobInput
     candidates: list[CandidateInput]
     config: ScreeningConfigInput
@@ -23,3 +23,5 @@ class ScreeningGraphState(TypedDict):
 
     results: list[RankedCandidate]
     error: Optional[str]
+
+    progress_cb: Optional[Callable[[int, int, int], Any]]

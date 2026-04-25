@@ -8,7 +8,7 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-2xl space-y-6 animate-[fadeIn_0.2s_ease-in-out]">
-      <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Settings</h1>
+      <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Settings</h1>
 
       <div className="card-stripe p-6 space-y-4">
         <h2 className="text-base font-semibold text-gray-900">Profile</h2>

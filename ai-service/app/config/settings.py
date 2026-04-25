@@ -24,6 +24,14 @@ class Settings(BaseSettings):
     # gRPC Server
     GRPC_SERVER_PORT: int = 50051
 
+    # Screening tuning
+    SCREENING_BATCH_SIZE: int = 20
+    SCREENING_MAX_CONCURRENCY: int = 6
+
+    # Progress callback to backend
+    BACKEND_PROGRESS_URL: str = "http://localhost:3000/api/v1/screenings"
+    INTERNAL_SERVICE_SECRET: str = ""
+
     class Config:
         env_file = ".env"
 

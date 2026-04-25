@@ -18,9 +18,9 @@ from app.services.screening_graph import get_screening_service
 logger = logging.getLogger(__name__)
 
 
-async def run_screening(request: ScreeningRequest) -> ScreeningResponse:
+async def run_screening(request: ScreeningRequest, progress_cb=None) -> ScreeningResponse:
     service = get_screening_service()
-    return await service.run(request)
+    return await service.run(request, progress_cb=progress_cb)
 
 
 async def extract_resume(request: ResumeExtractionRequest) -> ExtractedProfile:

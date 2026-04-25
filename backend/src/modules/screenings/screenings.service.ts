@@ -31,8 +31,8 @@ export class ScreeningsService {
     });
     if (!job) throw new NotFoundException('Job not found');
 
-    const applicants = await this.applicantModel.find({ jobId: job._id });
-    if (applicants.length === 0) {
+    const applicantsCount = await this.applicantModel.countDocuments({ jobId: job._id });
+    if (applicantsCount === 0) {
       throw new BadRequestException('No applicants found for this job');
     }
 
@@ -45,7 +45,10 @@ export class ScreeningsService {
         weights: dto.config?.weights || { skills: 0.3, experience: 0.25, education: 0.2, relevance: 0.25 },
         customInstructions: dto.config?.customInstructions || '',
       },
-      totalCandidatesEvaluated: applicants.length,
+      totalCandidatesEvaluated: applicantsCount,
+      progressBatchesDone: 0,
+      progressBatchesTotal: 0,
+      progressCandidatesDone: 0,
     });
 
     await this.jobModel.findByIdAndUpdate(job._id, {
@@ -53,10 +56,30 @@ export class ScreeningsService {
       $inc: { totalScreenings: 1 },
     });
 
+    setImmediate(() => {
+      this.runScreeningJob(screening._id.toString(), job._id.toString()).catch((err) => {
+        this.logger.error(`Background screening ${screening._id} crashed: ${err?.message}`, err?.stack);
+      });
+    });
+
+    return { screening, results: [] };
+  }
+
+  private async runScreeningJob(screeningId: string, jobId: string): Promise<void> {
     const startTime = Date.now();
 
+    const screening = await this.screeningModel.findById(screeningId);
+    const job = await this.jobModel.findById(jobId);
+    if (!screening || !job) {
+      this.logger.error(`Screening ${screeningId} or job ${jobId} disappeared before background job ran`);
+      return;
+    }
+
     try {
+      const applicants = await this.applicantModel.find({ jobId: job._id }).lean();
+
       const aiPayload = {
+        screeningId,
         job: {
           title: job.title,
           description: job.description,
@@ -66,7 +89,7 @@ export class ScreeningsService {
           maxExperienceYears: job.maxExperienceYears,
           educationRequirements: job.educationRequirements,
         },
-        candidates: applicants.map((a) => ({
+        candidates: applicants.map((a: any) => ({
           id: a._id.toString(),
           firstName: a.firstName,
           lastName: a.lastName,
@@ -93,12 +116,9 @@ export class ScreeningsService {
         },
       };
 
-      // Try gRPC first, fall back to HTTP
-      let aiResponse = await this.callAiServiceGrpc(aiPayload);
-
+      let aiResponse = await this.callAiServiceGrpc({ ...aiPayload, screeningId });
       if (!aiResponse) {
-        this.logger.log('gRPC unavailable, falling back to HTTP');
-        aiResponse = await this.callAiServiceHttp(aiPayload);
+        aiResponse = await this.callAiServiceHttp({ ...aiPayload, screeningId });
       }
 
       const aiResults = aiResponse.results || [];
@@ -139,11 +159,10 @@ export class ScreeningsService {
       });
 
       await this.jobModel.findByIdAndUpdate(job._id, { status: JobStatus.OPEN });
-
-      return this.findById(screening._id.toString());
+      this.logger.log(`Screening ${screening._id} completed in ${Date.now() - startTime}ms (${applicants.length} candidates)`);
     } catch (error: any) {
       const aiDetail = error?.response?.data?.detail;
-      const friendly = typeof aiDetail === 'string' ? aiDetail : (error.message || 'AI service error');
+      const friendly = typeof aiDetail === 'string' ? aiDetail : (error?.message || 'AI service error');
 
       await this.screeningModel.findByIdAndUpdate(screening._id, {
         status: ScreeningStatus.FAILED,
@@ -152,8 +171,19 @@ export class ScreeningsService {
       });
 
       await this.jobModel.findByIdAndUpdate(job._id, { status: JobStatus.OPEN });
+      this.logger.error(`Screening ${screening._id} failed: ${friendly}`);
+    }
+  }
 
-      throw new BadRequestException(friendly);
+  async updateProgress(screeningId: string, batchesDone: number, batchesTotal: number, candidatesDone: number): Promise<void> {
+    try {
+      await this.screeningModel.findByIdAndUpdate(screeningId, {
+        progressBatchesDone: batchesDone,
+        progressBatchesTotal: batchesTotal,
+        progressCandidatesDone: candidatesDone,
+      });
+    } catch (err: any) {
+      this.logger.warn(`Failed to update progress for screening ${screeningId}: ${err?.message}`);
     }
   }
 
@@ -173,7 +203,7 @@ export class ScreeningsService {
   private async callAiServiceHttp(payload: any): Promise<any> {
     const aiServiceUrl = this.configService.get<string>('AI_SERVICE_URL', 'http://localhost:8000');
     const response = await axios.post(`${aiServiceUrl}/api/v1/screen`, payload, {
-      timeout: 120000,
+      timeout: 30 * 60 * 1000,
     });
     this.logger.log(`Screening completed via HTTP: ${response.data.results?.length} results`);
     return response.data;

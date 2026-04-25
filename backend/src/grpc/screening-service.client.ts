@@ -19,6 +19,11 @@ export class ScreeningServiceClient implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit() {
+    if (process.env.DISABLE_GRPC === 'true') {
+      this.screeningService = null;
+      return;
+    }
+
     try {
       this.screeningService = this.client.getService<ScreeningService>('ScreeningService');
       this.logger.log('Screening Service gRPC client initialized');
@@ -41,6 +46,7 @@ export class ScreeningServiceClient implements OnModuleInit, OnModuleDestroy {
     job: any;
     candidates: any[];
     config: any;
+    screeningId?: string;
   }): Promise<any | null> {
     if (!this.screeningService) return null;
 
@@ -135,15 +141,15 @@ export class ScreeningServiceClient implements OnModuleInit, OnModuleDestroy {
           },
           custom_instructions: payload.config.customInstructions || '',
         },
-        request_id: `scr_${Date.now()}`,
+        request_id: payload.screeningId || `scr_${Date.now()}`,
       };
 
       const response = await lastValueFrom(
         this.screeningService.ScreenCandidates(grpcPayload).pipe(
-          timeout(120000),
+          timeout(30 * 60 * 1000),
           retry({ count: 1, delay: 3000 }),
           catchError((error) => {
-            this.logger.warn(`gRPC ScreenCandidates failed: ${error.message}`);
+            this.logger.debug(`gRPC ScreenCandidates failed: ${error.message}`);
             return throwError(() => error);
           }),
         ),
@@ -181,7 +187,7 @@ export class ScreeningServiceClient implements OnModuleInit, OnModuleDestroy {
         },
       };
     } catch (error) {
-      this.logger.warn(`gRPC ScreenCandidates exception: ${error.message}`);
+      this.logger.debug(`gRPC ScreenCandidates exception: ${error.message}`);
       return null;
     }
   }
@@ -198,7 +204,7 @@ export class ScreeningServiceClient implements OnModuleInit, OnModuleDestroy {
           timeout(60000),
           retry({ count: 1, delay: 2000 }),
           catchError((error) => {
-            this.logger.warn(`gRPC ExtractResume failed: ${error.message}`);
+            this.logger.debug(`gRPC ExtractResume failed: ${error.message}`);
             return throwError(() => error);
           }),
         ),
@@ -268,7 +274,7 @@ export class ScreeningServiceClient implements OnModuleInit, OnModuleDestroy {
         currentCompany: response.current_company,
       };
     } catch (error) {
-      this.logger.warn(`gRPC ExtractResume exception: ${error.message}`);
+      this.logger.debug(`gRPC ExtractResume exception: ${error.message}`);
       return null;
     }
   }

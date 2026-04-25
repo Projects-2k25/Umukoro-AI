@@ -123,17 +123,17 @@ export default function JobDetailPage() {
   return (
     <div className="space-y-6 animate-[fadeIn_0.2s_ease-in-out]">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-start gap-3">
-          <Link href="/jobs" className="p-2 hover:bg-gray-100 rounded-lg transition-colors mt-0.5">
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+        <div className="flex items-start gap-2 sm:gap-3 min-w-0">
+          <Link href="/jobs" className="p-2 hover:bg-gray-100 rounded-lg transition-colors mt-0.5 shrink-0">
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </Link>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{job.title}</h1>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight wrap-break-word">{job.title}</h1>
               <StatusBadge status={job.status} type="job" />
             </div>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 mt-1 wrap-break-word">
               {job.department && `${job.department} · `}{job.location || 'Remote'} · {job.experienceLevel} · {formatDate(job.createdAt)}
             </p>
           </div>
@@ -142,7 +142,7 @@ export default function JobDetailPage() {
           onClick={handleScreening}
           disabled={screening || applicants.length === 0}
           className={cn(
-            'inline-flex items-center gap-2 font-semibold py-2.5 px-5 rounded-lg transition-all text-sm',
+            'inline-flex items-center justify-center gap-2 font-semibold py-2.5 px-5 rounded-lg transition-all text-sm shrink-0',
             applicants.length === 0
               ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
               : 'bg-primary-600 hover:bg-primary-700 text-white shadow-sm'
@@ -250,8 +250,8 @@ export default function JobDetailPage() {
 
           {/* Applicants List */}
           {applicants.length > 0 && (
-            <div className="card-stripe overflow-hidden">
-              <table className="w-full">
+            <div className="card-stripe overflow-x-auto">
+              <table className="w-full min-w-[760px]">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
                     <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Name</th>

@@ -33,14 +33,14 @@ export default function JobsPage() {
 
   return (
     <div className="space-y-6 animate-[fadeIn_0.2s_ease-in-out]">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Jobs</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Jobs</h1>
           <p className="text-sm text-gray-500 mt-1">{total} job{total !== 1 ? 's' : ''} total</p>
         </div>
         <Link
           href="/jobs/new"
-          className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors text-sm"
+          className="inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors text-sm self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
           Create Job
@@ -48,8 +48,8 @@ export default function JobsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-3">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1 sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
@@ -73,8 +73,8 @@ export default function JobsPage() {
       </div>
 
       {/* Jobs Table */}
-      <div className="card-stripe overflow-hidden">
-        <table className="w-full">
+      <div className="card-stripe overflow-x-auto">
+        <table className="w-full min-w-[640px]">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
               <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Job Title</th>

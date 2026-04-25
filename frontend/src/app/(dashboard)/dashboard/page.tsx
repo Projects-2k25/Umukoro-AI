@@ -29,14 +29,14 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 animate-[fadeIn_0.2s_ease-in-out]">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
           <p className="text-sm text-gray-500 mt-1">Overview of your recruitment screening activity</p>
         </div>
         <Link
           href="/jobs/new"
-          className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors text-sm"
+          className="inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors text-sm self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
           Create Job

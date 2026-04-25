@@ -60,6 +60,15 @@ export class Screening extends Document {
 
   @Prop()
   error: string;
+
+  @Prop({ default: 0 })
+  progressBatchesDone: number;
+
+  @Prop({ default: 0 })
+  progressBatchesTotal: number;
+
+  @Prop({ default: 0 })
+  progressCandidatesDone: number;
 }
 
 export const ScreeningSchema = SchemaFactory.createForClass(Screening);
