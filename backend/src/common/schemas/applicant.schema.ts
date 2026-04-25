@@ -139,7 +139,6 @@ export class Applicant extends Document {
   @Prop({ type: String, enum: ApplicantSource, default: ApplicantSource.MANUAL })
   source: ApplicantSource;
 
-  // 3.1 Basic Information
   @Prop({ required: true, trim: true })
   firstName: string;
 
@@ -158,38 +157,30 @@ export class Applicant extends Document {
   @Prop({ required: true, trim: true })
   location: string;
 
-  // 3.2 Skills & Languages
   @Prop({ type: [ApplicantSkill], default: [] })
   skills: ApplicantSkill[];
 
   @Prop({ type: [Language], default: [] })
   languages: Language[];
 
-  // 3.3 Work Experience
   @Prop({ type: [Experience], default: [] })
   experience: Experience[];
 
-  // 3.4 Education
   @Prop({ type: [Education], default: [] })
   education: Education[];
 
-  // 3.5 Certifications
   @Prop({ type: [Certification], default: [] })
   certifications: Certification[];
 
-  // 3.6 Projects
   @Prop({ type: [Project], default: [] })
   projects: Project[];
 
-  // 3.7 Availability
   @Prop({ type: Availability })
   availability: Availability;
 
-  // 3.8 Social Links
   @Prop({ type: SocialLinks })
   socialLinks: SocialLinks;
 
-  // --- Internal / system fields (not in hackathon spec) ---
   @Prop({ trim: true })
   phone: string;
 

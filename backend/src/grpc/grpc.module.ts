@@ -28,8 +28,8 @@ const grpcClientsModule = ClientsModule.registerAsync([
         package: 'screening',
         protoPath: resolveProtoPath('screening_service.proto'),
         url: configService.get<string>('AI_SERVICE_GRPC_URL', 'localhost:50051'),
-        timeout: 120000, // 2 min — screening can take time
-        maxReceiveMessageLength: 10 * 1024 * 1024, // 10MB
+        timeout: 120000,
+        maxReceiveMessageLength: 10 * 1024 * 1024,
         maxSendMessageLength: 10 * 1024 * 1024,
         loader: {
           keepCase: true,

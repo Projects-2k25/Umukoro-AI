@@ -154,10 +154,6 @@ export class ScreeningsService {
     }
   }
 
-  /**
-   * Call AI service via gRPC (preferred).
-   * Returns null if gRPC is unavailable.
-   */
   private async callAiServiceGrpc(payload: any): Promise<any | null> {
     try {
       const result = await this.screeningClient.screenCandidates(payload);
@@ -171,9 +167,6 @@ export class ScreeningsService {
     }
   }
 
-  /**
-   * Call AI service via HTTP (fallback).
-   */
   private async callAiServiceHttp(payload: any): Promise<any> {
     const aiServiceUrl = this.configService.get<string>('AI_SERVICE_URL', 'http://localhost:8000');
     const response = await axios.post(`${aiServiceUrl}/api/v1/screen`, payload, {

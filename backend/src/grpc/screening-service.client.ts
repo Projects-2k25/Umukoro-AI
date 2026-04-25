@@ -37,10 +37,6 @@ export class ScreeningServiceClient implements OnModuleInit, OnModuleDestroy {
     this.logger.log('Screening Service gRPC client destroyed');
   }
 
-  /**
-   * Screen candidates via gRPC.
-   * Returns null if gRPC is unavailable (caller should fall back to HTTP).
-   */
   async screenCandidates(payload: {
     job: any;
     candidates: any[];
@@ -158,7 +154,6 @@ export class ScreeningServiceClient implements OnModuleInit, OnModuleDestroy {
         return null;
       }
 
-      // Map snake_case gRPC response back to camelCase
       return {
         results: (response.results || []).map((r: any) => ({
           candidateId: r.candidate_id,
@@ -191,10 +186,6 @@ export class ScreeningServiceClient implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  /**
-   * Extract resume via gRPC.
-   * Returns null if gRPC is unavailable.
-   */
   async extractResume(resumeText: string): Promise<any | null> {
     if (!this.screeningService) return null;
 
