@@ -1,9 +1,3 @@
-"""
-Screening workflow — delegates to LangGraph-based ScreeningWorkflowService.
-
-Resume extraction remains standalone (single LLM call, no graph needed).
-"""
-
 import json
 import logging
 
@@ -23,13 +17,11 @@ logger = logging.getLogger(__name__)
 
 
 async def run_screening(request: ScreeningRequest) -> ScreeningResponse:
-    """Run candidate screening through the LangGraph workflow."""
     service = get_screening_service()
     return await service.run(request)
 
 
 async def extract_resume(request: ResumeExtractionRequest) -> ExtractedProfile:
-    """Extract structured profile from resume text via LLM."""
     llm = get_llm()
 
     prompt = RESUME_EXTRACTION_PROMPT.format(resume_text=request.resumeText[:5000])

@@ -1,5 +1,3 @@
-"""LangChain LLM factory — singleton for use in LangGraph nodes."""
-
 import logging
 from typing import Optional
 

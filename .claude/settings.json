@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/**)",
+      "Bash(./venv/bin/python -c \"from app.schemas.screening import *; from app.services.screening_graph import get_screening_service; from app.services.screening_workflow import run_screening, extract_resume; from app.grpc.server.screening_grpc_service import ScreeningServicer; print\\('AI service imports OK'\\)\")",
+      "Bash(./venv/bin/python -c \"from app.schemas.screening import *; from app.services.screening_graph import get_screening_service; from app.services.screening_workflow import run_screening, extract_resume; from app.services.screening_state import ScreeningGraphState; print\\('Core imports OK'\\)\")"
+    ]
+  }
+}

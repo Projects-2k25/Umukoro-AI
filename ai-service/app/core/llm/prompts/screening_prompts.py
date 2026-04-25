@@ -45,7 +45,7 @@ For each candidate below, write a 2-3 sentence explanation that:
 {formatted_candidates_with_scores}
 """
 
-RESUME_EXTRACTION_PROMPT = """Extract structured profile information from this resume text. Be thorough but accurate — only extract information that is clearly stated.
+RESUME_EXTRACTION_PROMPT = """Extract structured profile information from this resume text. Be thorough but accurate - only extract information that is clearly stated.
 
 Resume text:
 {resume_text}

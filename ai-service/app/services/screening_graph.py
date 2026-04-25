@@ -1,10 +1,3 @@
-"""
-LangGraph-based screening workflow service.
-
-Orchestrates candidate evaluation through a StateGraph:
-  batch_evaluate → compute_scores → rank_shortlist → generate_reasoning → build_response
-"""
-
 import json
 import logging
 import time
@@ -34,31 +27,22 @@ BATCH_SIZE = 10
 
 
 class ScreeningWorkflowService:
-    """Screening workflow orchestrated by LangGraph StateGraph."""
-
     def __init__(self):
         self.llm = get_llm()
         self.workflow = self._build_workflow()
         logger.info("ScreeningWorkflowService initialized with LangGraph")
 
-    # ------------------------------------------------------------------ #
-    #  Graph construction                                                  #
-    # ------------------------------------------------------------------ #
-
     def _build_workflow(self) -> StateGraph:
         workflow = StateGraph(ScreeningGraphState)
 
-        # Nodes
         workflow.add_node("batch_evaluate", self._batch_evaluate)
         workflow.add_node("compute_scores", self._compute_scores)
         workflow.add_node("rank_shortlist", self._rank_shortlist)
         workflow.add_node("generate_reasoning", self._generate_reasoning)
         workflow.add_node("build_response", self._build_response)
 
-        # Entry
         workflow.set_entry_point("batch_evaluate")
 
-        # batch_evaluate loops until all batches processed
         workflow.add_conditional_edges(
             "batch_evaluate",
             self._route_after_batch,
@@ -70,7 +54,6 @@ class ScreeningWorkflowService:
 
         workflow.add_edge("compute_scores", "rank_shortlist")
 
-        # Skip reasoning if no viable candidates
         workflow.add_conditional_edges(
             "rank_shortlist",
             self._route_after_ranking,
@@ -85,10 +68,6 @@ class ScreeningWorkflowService:
 
         return workflow.compile()
 
-    # ------------------------------------------------------------------ #
-    #  Routing functions                                                   #
-    # ------------------------------------------------------------------ #
-
     def _route_after_batch(self, state: ScreeningGraphState) -> str:
         if state.get("all_batches_done", False):
             return "compute_scores"
@@ -99,12 +78,7 @@ class ScreeningWorkflowService:
             return "build_response"
         return "generate_reasoning"
 
-    # ------------------------------------------------------------------ #
-    #  Graph nodes                                                         #
-    # ------------------------------------------------------------------ #
-
     async def _batch_evaluate(self, state: ScreeningGraphState) -> dict:
-        """Evaluate the next batch of candidates via LLM."""
         idx = state.get("current_batch_index", 0)
         candidates = state["candidates"]
         batch = candidates[idx * BATCH_SIZE : (idx + 1) * BATCH_SIZE]
@@ -138,7 +112,6 @@ class ScreeningWorkflowService:
         }
 
     async def _compute_scores(self, state: ScreeningGraphState) -> dict:
-        """Compute weighted overall scores (pure logic, no LLM)."""
         weights = state["config"].weights
         evaluations = list(state["evaluations"])
 
@@ -154,7 +127,6 @@ class ScreeningWorkflowService:
         return {"evaluations": evaluations}
 
     async def _rank_shortlist(self, state: ScreeningGraphState) -> dict:
-        """Sort, slice top N, assign ranks and recommendations."""
         evaluations = state["evaluations"]
         shortlist_size = state["config"].shortlistSize
 
@@ -180,7 +152,6 @@ class ScreeningWorkflowService:
         return {"shortlisted": shortlisted, "skip_reasoning": skip}
 
     async def _generate_reasoning(self, state: ScreeningGraphState) -> dict:
-        """Generate recruiter-facing reasoning summaries via LLM."""
         job = state["job"]
         shortlisted = list(state["shortlisted"])
         candidates_map = state["candidates_map"]
@@ -212,7 +183,6 @@ class ScreeningWorkflowService:
         return {"shortlisted": shortlisted}
 
     async def _build_response(self, state: ScreeningGraphState) -> dict:
-        """Convert shortlisted dicts into RankedCandidate models."""
         shortlisted = state.get("shortlisted", [])
 
         if state.get("skip_reasoning", False):
@@ -244,10 +214,6 @@ class ScreeningWorkflowService:
         ]
 
         return {"results": results}
-
-    # ------------------------------------------------------------------ #
-    #  Prompt builders (moved from old screening_workflow.py)              #
-    # ------------------------------------------------------------------ #
 
     def _format_skills(self, job) -> str:
         if not job.requiredSkills:
@@ -407,10 +373,6 @@ Return ONLY the JSON array."""
 
         return prompt
 
-    # ------------------------------------------------------------------ #
-    #  Utilities                                                           #
-    # ------------------------------------------------------------------ #
-
     @staticmethod
     def _clean_json(text: str) -> str:
         text = text.strip()
@@ -422,12 +384,7 @@ Return ONLY the JSON array."""
             text = text[:-3]
         return text.strip()
 
-    # ------------------------------------------------------------------ #
-    #  Public entry point                                                  #
-    # ------------------------------------------------------------------ #
-
     async def run(self, request: ScreeningRequest) -> ScreeningResponse:
-        """Run the screening workflow through the LangGraph pipeline."""
         start_time = time.time()
         candidates_map = {c.id: c for c in request.candidates}
 
@@ -465,15 +422,10 @@ Return ONLY the JSON array."""
         )
 
 
-# ------------------------------------------------------------------ #
-#  Singleton                                                           #
-# ------------------------------------------------------------------ #
-
 _service: Optional[ScreeningWorkflowService] = None
 
 
 def get_screening_service() -> ScreeningWorkflowService:
-    """Get or create the screening workflow service singleton."""
     global _service
     if _service is None:
         _service = ScreeningWorkflowService()

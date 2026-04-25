@@ -1,10 +1,3 @@
-"""
-gRPC Screening Service Implementation.
-Maps gRPC calls to the existing screening workflow service.
-
-No authentication - internal services are trusted.
-"""
-
 import logging
 import uuid
 from datetime import datetime
@@ -35,8 +28,6 @@ logger = logging.getLogger(__name__)
 
 
 class ScreeningServicer(screening_service_pb2_grpc.ScreeningServiceServicer):
-    """gRPC servicer implementing the ScreeningService interface."""
-
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.info("ScreeningServicer initialized")
@@ -45,7 +36,6 @@ class ScreeningServicer(screening_service_pb2_grpc.ScreeningServiceServicer):
         return f"grpc-{int(datetime.utcnow().timestamp())}-{uuid.uuid4().hex[:8]}"
 
     async def ScreenCandidates(self, request, context):
-        """Screen candidates against job requirements."""
         request_id = request.request_id or self._generate_request_id()
         self.logger.info(
             f"[{request_id}] ScreenCandidates: {len(request.candidates)} candidates for '{request.job.title}'"
@@ -206,7 +196,6 @@ class ScreeningServicer(screening_service_pb2_grpc.ScreeningServiceServicer):
             )
 
     async def ExtractResume(self, request, context):
-        """Extract structured profile from resume text."""
         request_id = request.request_id or self._generate_request_id()
         self.logger.info(f"[{request_id}] ExtractResume ({len(request.resume_text)} chars)")
 
@@ -294,7 +283,6 @@ class ScreeningServicer(screening_service_pb2_grpc.ScreeningServiceServicer):
             )
 
     async def HealthCheck(self, request, context):
-        """Health check endpoint."""
         return screening_service_pb2.HealthCheckResponse(
             healthy=True,
             status="SERVING",
