@@ -1,7 +1,10 @@
 import * as mongoose from 'mongoose';
 import * as bcrypt from 'bcryptjs';
+import * as dotenv from 'dotenv';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/umukoro_ai';
+dotenv.config();
+
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/talentlens';
 
 const userSchema = new mongoose.Schema({
   email: String, password: String, firstName: String, lastName: String,
