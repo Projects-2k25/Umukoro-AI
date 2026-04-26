@@ -4,6 +4,47 @@ An intelligent recruitment screening tool that uses Google Gemini AI to analyze,
 
 Built for the **Umurava AI Hackathon** — "Building AI Products for the Human Resources Industry."
 
+---
+
+## 🚀 Live System
+
+> **Live URL:** **[http://69.30.247.19:10065/](http://69.30.247.19:10065/)**
+>
+> Hosted on our own **DigitalOcean VPS** — no Vercel, no Netlify, no managed PaaS. The full stack (frontend, backend, AI service, MongoDB) runs on infrastructure we own and operate end-to-end.
+
+### 🔑 Demo Credentials
+
+| Field    | Value                  |
+|----------|------------------------|
+| Email    | `demo@umukoroai.com`   |
+| Password | `Demo123!`             |
+
+### 🔌 Ready to Integrate with Umurava
+
+**Umukoro AI is production-ready and built to plug directly into the Umurava platform.** The architecture was designed from day one with Umurava integration in mind:
+
+- The applicant ingestion pipeline natively understands the **Umurava talent profile schema** (`ApplicantSource.UMURAVA_PROFILE`) — recruiters can pull candidates straight from Umurava's talent pool with no transformation step.
+- The backend exposes a clean, versioned REST API (`/api/v1/...`) and a typed gRPC contract — either can be consumed by Umurava's services with minimal glue code.
+- Auth is JWT-based and stateless, so SSO with Umurava's identity provider is a drop-in change.
+- All services are containerized and horizontally scalable behind Umurava's existing infrastructure.
+
+In short: **flip the integration switch and Umurava recruiters get AI-powered screening tomorrow.**
+
+### 🌱 Running Seeders
+
+The backend ships with a seed script that populates demo recruiters, jobs, applicants, and a sample screening — perfect for local exploration or resetting a staging environment.
+
+```bash
+cd backend
+npm run seed
+```
+
+This creates the demo recruiter (`demo@umukoroai.com` / `Demo123!`), a handful of jobs, ~25 applicants per job, and one completed screening so you can immediately see the ranked-shortlist UI without running a real screening first.
+
+> Run `npm run seed` again at any time — it's idempotent and will refresh the demo data.
+
+---
+
 ## Features
 
 - **Job Management** — Create jobs with detailed requirements, skills (with importance weights), experience levels, and education criteria
@@ -158,6 +199,36 @@ Why a graph instead of a straight script? Three reasons:
 
 The whole call is synchronous — the HTTP request from the frontend stays open for the full 5-15s. This is intentional for hackathon simplicity; production would queue step 5 and stream results back over websockets or poll a status endpoint.
 
+### ⚙️ Environment Variables
+
+**Backend (`.env`)**
+
+| Variable         | Description                                       |
+|------------------|---------------------------------------------------|
+| `MONGODB_URI`    | MongoDB connection string                         |
+| `JWT_SECRET`     | JWT signing secret                                |
+| `AI_SERVICE_URL` | AI service URL (default: `http://localhost:8000`) |
+| `CLIENT_URL`     | Frontend URL for CORS                             |
+
+**AI Service (`.env`)**
+
+| Variable         | Description                                |
+|------------------|--------------------------------------------|
+| `GEMINI_API_KEY` | Google Gemini API key (required)           |
+| `GEMINI_MODEL`   | Gemini model (default: `gemini-2.0-flash`) |
+
+### 📘 API Documentation
+
+Backend Swagger docs are available at **`http://localhost:3000/api-docs`** (or `http://69.30.247.19:10065/api-docs` on the live VPS).
+
+### ⚠️ Assumptions & Limitations
+
+- **Screening is synchronous** — For hackathon simplicity, the screening API call blocks until AI processing completes (5-15s for up to 50 candidates)
+- **No file storage** — PDF resumes are parsed in-memory; text is stored but original files are not persisted
+- **Single-tenant** — No multi-organization support; designed for single-recruiter use
+- **Gemini rate limits** — Large candidate pools (100+) may hit API rate limits; batches of 10 mitigate this
+- **Scoring calibration** — AI scores are relative within a screening, not absolute across different screenings
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -220,34 +291,6 @@ GEMINI_API_KEY=your-key docker compose up
 | Email | `demo@umukoroai.com` |
 | Password | `Demo123!` |
 
-## Environment Variables
-
-### Backend (.env)
-| Variable | Description |
-|----------|-----------|
-| MONGODB_URI | MongoDB connection string |
-| JWT_SECRET | JWT signing secret |
-| AI_SERVICE_URL | AI service URL (default: http://localhost:8000) |
-| CLIENT_URL | Frontend URL for CORS |
-
-### AI Service (.env)
-| Variable | Description |
-|----------|-----------|
-| GEMINI_API_KEY | Google Gemini API key (required) |
-| GEMINI_MODEL | Gemini model (default: gemini-2.0-flash) |
-
-## API Documentation
-
-Backend Swagger docs available at `http://localhost:3000/api-docs`
-
-## Assumptions & Limitations
-
-- **Screening is synchronous** — For hackathon simplicity, the screening API call blocks until AI processing completes (5-15s for up to 50 candidates)
-- **No file storage** — PDF resumes are parsed in-memory; text is stored but original files are not persisted
-- **Single-tenant** — No multi-organization support; designed for single-recruiter use
-- **Gemini rate limits** — Large candidate pools (100+) may hit API rate limits; batches of 10 mitigate this
-- **Scoring calibration** — AI scores are relative within a screening, not absolute across different screenings
-
 ## Team
 
-Built by the ZenX team for the Umurava AI Hackathon 2026.
+Built by the Umukoro team for the Umurava AI Hackathon 2026.
